@@ -49,12 +49,9 @@ output:
 library(flexdashboard)
 library(tidyverse)
 library(ggplot2)
-library(ggiraph)
 library(shiny)
 library(plotly)
 library(formattable)
-library(rbokeh)
-library(maps)
 library(leaflet)
 library(rgdal)
 
