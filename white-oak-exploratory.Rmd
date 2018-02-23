@@ -1,0 +1,134 @@
+---
+title: "White Oak Exploration"
+author: "Paul Forst, Tammy Hang, Rachel Kopecky, Jack Letcher, Ian O'Connor"
+output:
+  html_document:
+    theme: sandstone
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  html_notebook:
+    fig_caption: yes
+    highlight: textmate
+    theme: sandstone
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9)
+
+library(tidyverse)
+library(ggplot2)
+library(readr)
+```
+
+# Data
+
+### White Oak
+
+The White Oak data used for this analysis was received from the U.S. Forest Service (USFS). The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern United States, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1968 through 2017.
+
+### Climate
+
+### Urbanization
+
+### Invasive Species
+
+# Exploration
+
+## White Oak
+
+#### Inventory
+
+The plot below shows the total White Oak inventory from 1968 through 2017, as recorded in the USFS database.
+
+```{r}
+# Read in and manipulate inventory data. These are the raw files from the US Forest service.
+inv23 <- read_csv("white_oak_inv_23.csv")
+inv24 <- read_csv("white_oak_inv_24.csv")
+inv33 <- read_csv("white_oak_inv_33.csv")
+
+inventory <- rbind(inv23, inv24, inv33)
+
+inventory[is.na(inventory)] <- 0
+
+# Create an identifier
+inventory$UNIT <- paste0(inventory$STATECD, "0", inventory$UNITCD)
+
+inventory %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE)) %>% 
+  ggplot(aes(x = EVAL_GRP_YEAR, y = total_inventory)) +
+  geom_line() +
+  labs(title = "White Oak Inventory (1968 - 2017)",
+       y = "White Oak, Cubic Feet",
+       x = "Year") +
+  theme_minimal()
+```
+
+From this plot we can see a very severe increase in the total inventory after the year 2000. After speaking with the USFS, we have discovered that this is a result of switching from a periodic to an annual collection method in the early 2000's. This transition led the USFS to begin collecting data from samples of all states each year, rather than the entirety of just a few states under the periodic method.
+
+The next plot shows the annual growth, removal, and mortality of the White Oak population. We would expect to see similar patterns around the year 2000, to coincide with the change in collection method.
+
+```{r}
+# Read in growth, removal, mortality data
+oak <- read_csv("white-oak-clean.csv")
+oak[is.na(oak)] <- 0
+
+oak %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE),
+            total_growth = sum(SELECT_WHITE_OAK_GROWTH, na.rm = TRUE),
+            total_mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE)) %>% 
+  gather("type",
+         "value",
+         -EVAL_GRP_YEAR) %>% 
+  ggplot(aes(x = EVAL_GRP_YEAR, y = value, colour = type)) +
+  geom_line() +
+  labs(title = "White Oak Growth, Removal, and Mortality (1968 - 2017)",
+       y = "White Oak, Cubic Feet",
+       x = "Year") +
+  theme_minimal()
+```
+
+We do see the increase in each after the year 2000, which means that our data is consistent across fields. However, because of this change in collection method, any forecast based off the raw values would most likely over-forecast the increasing trend into the future. 
+
+To get a better idea of how growth, removal, and mortality have truly changed over the years, we can plot each of these as a percentage of the total inventory. 
+
+```{r}
+oak_merge <- oak %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
+  summarise(total_removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE),
+            total_growth = sum(SELECT_WHITE_OAK_GROWTH, na.rm = TRUE),
+            total_mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE))
+
+inventory_merge <- inventory %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
+  summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+
+oak_total <- merge(oak_merge, inventory_merge, by = c("STATE_ABBR", "EVAL_GRP_YEAR", "UNIT"))
+
+oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_growth = sum(total_growth),
+            total_removal = sum(total_removal),
+            total_mortality = sum(total_mortality),
+            total_inventory = sum(total_inventory)) %>% 
+  mutate(removal_pct_inventory = total_removal/total_inventory,
+         growth_pct_inventory = total_growth/total_inventory,
+         mortality_pct_inventory = total_mortality/total_inventory) %>% 
+  select(EVAL_GRP_YEAR, removal_pct_inventory, growth_pct_inventory, mortality_pct_inventory) %>% 
+  gather("type",
+         "value",
+         -EVAL_GRP_YEAR) %>%   
+  ggplot(aes(x = EVAL_GRP_YEAR, y = value, colour = type)) +
+  geom_line() +
+  labs(title = "Growth, Removal, Mortality - Percent of Total Inventory (1968 - 2017)",
+       y = "Percent of Inventory",
+       x = "Year") +
+  theme_minimal()
+```
+
+We see a lot of variation in the growth and removal data during the time of the periodic collection method, and we see a lot of the trend smooth out in the early 2000s. From the plot above, we notice a downward trend in both growth and removal, while we see an upward trend in mortality. 
