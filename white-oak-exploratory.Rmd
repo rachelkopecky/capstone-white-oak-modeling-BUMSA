@@ -210,10 +210,12 @@ The Palmer Drought Severity Index is a measure the dryness of a region based on 
 ```{r}
 pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
 
-colnames(pdsi_data) <- c("Region_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
 
-pdsi_data$Region <- substr(pdsi_data$Region_Year, 1, nchar(pdsi_data$Region_Year)-3)
-pdsi_data$Year <- substr(pdsi_data$Region_Year, nchar(pdsi_data$Region_Year)-3, nchar(pdsi_data$Region_Year))
+pdsi_data$State <- substr(pdsi_data$Division_Year, 1, nchar(pdsi_data$Division_Year)-8)
+pdsi_data$Division <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-7, nchar(pdsi_data$Division_Year)-6)
+pdsi_data$Unknown <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
+pdsi_data$Year <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-3, nchar(pdsi_data$Division_Year))
 
 ```
 
