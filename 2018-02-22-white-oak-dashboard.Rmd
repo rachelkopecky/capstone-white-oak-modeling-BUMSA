@@ -56,7 +56,7 @@ library(leaflet)
 library(rgdal)
 
 # Read in the data. This data was cleaned and merged in the for_dashboard.R script.
-data <- read.csv("white-oak-clean.csv")
+data <- read.csv("WhiteOakData/white-oak-clean.csv")
 
 data[is.na(data)] <- 0
 
@@ -68,9 +68,9 @@ national <- data %>%
             total.removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE))
 
 # Read in and manipulate inventory data. These are the raw files from the US Forest service.
-inv23 <- read_csv("white_oak_inv_23.csv")
-inv24 <- read_csv("white_oak_inv_24.csv")
-inv33 <- read_csv("white_oak_inv_33.csv")
+inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
+inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
+inv33 <- read_csv("WhiteOakData/white_oak_inv_33.csv")
 
 inventory <- rbind(inv23, inv24, inv33)
 
@@ -354,7 +354,7 @@ inventory.map.unit <- inv.unit.rolled %>%
 colnames(inventory.map)[1] <- "STUSPS"
 
 # Read in state shape file
-states_shp <- readOGR(".", layer = "cb_2016_us_state_500k",
+states_shp <- readOGR("MapFiles", layer = "cb_2016_us_state_500k",
                       GDAL1_integer64_policy = TRUE, verbose = FALSE)
 
 # Remove non-contiguous states/territories
@@ -366,7 +366,7 @@ states.shp <- sp::merge(states.shp, inventory.map, by = "STUSPS")
 stusps <- as.vector(as.character(states.shp@data$STUSPS))
 
 # Read in unit shape file (from US forest service)
-units_shp <- readOGR(".", layer = "eastunits",
+units_shp <- readOGR("MapFiles", layer = "eastunits",
                      GDAL1_integer64_policy = TRUE, verbose = FALSE)
 
 # Merge inventory and shape files. Log transform for a more distinct break in heat map colors. 
@@ -800,7 +800,7 @@ inventory.map.unit <- inv.unit.rolled %>%
 
 colnames(inventory.map)[1] <- "STUSPS"
 
-states_shp <- readOGR(".", layer = "cb_2016_us_state_500k",
+states_shp <- readOGR("MapFiles", layer = "cb_2016_us_state_500k",
                       GDAL1_integer64_policy = TRUE, verbose = FALSE)
 
 states.shp <- subset(states_shp, !states_shp$STUSPS %in% c("AK", "GU", "MP", "VI", "AS", "PR", "HI"))
@@ -809,7 +809,7 @@ states.shp <- sp::merge(states.shp, inventory.map, by = "STUSPS")
 
 stusps <- as.vector(as.character(states.shp@data$STUSPS))
 
-units_shp <- readOGR(".", layer = "eastunits",
+units_shp <- readOGR("MapFiles", layer = "eastunits",
                      GDAL1_integer64_policy = TRUE, verbose = FALSE)
 
 units.shp <- sp::merge(units_shp, inventory.map.unit, by = "UNIT")
