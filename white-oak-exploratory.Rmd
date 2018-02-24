@@ -145,7 +145,7 @@ We see a lot of variation in the growth and removal data during the time of the 
 Urbanization is something that the USFS uses in their forecasting, so we would also like to implement this in ours, as it may have some predictive power. The plot below shows the United States urban land area in square miles. Unfortunately, we have only been able to find this data in 10 year intervals thus far, and that may not be enough information to even interpolate the missing values.
 
 ```{r}
-urban_area <- read_csv("urban_land_area.csv")
+urban_area <- read_csv("UrbanizationData/urban_land_area.csv")
 
 urban_area <- gather(urban_area, 
                      "year", 
@@ -173,7 +173,7 @@ Although we do not have annual values, there is a clear upward trend in the urba
 We also wanted to see if the percent of land under various drought conditions has any relation to white oak growth, mortality, and removal.
 
 ```{r}
-drought_national <- read_csv("drought_national.csv")
+drought_national <- read_csv("ClimateData/drought_national.csv")
 
 drought_national$ReleaseDate <- as.character(drought_national$ReleaseDate)
 drought_national$ReleaseDate <- as.Date(drought_national$ReleaseDate, "%Y%m%d")
@@ -202,6 +202,20 @@ drought_national_annual %>%
 ```
 
 It is not easy to identify any real trend in the annual percent of drought land. This type of data may not make sense at an annual level, as we had to take the mean of weekly data, and any variation/trend may have been washed out in the average.
+
+#### Palmer Drought Severity Index
+
+The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
+
+```{r}
+pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
+
+colnames(pdsi_data) <- c("Region_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+
+pdsi_data$Region <- substr(pdsi_data$Region_Year, 1, nchar(pdsi_data$Region_Year)-3)
+pdsi_data$Year <- substr(pdsi_data$Region_Year, nchar(pdsi_data$Region_Year)-3, nchar(pdsi_data$Region_Year))
+
+```
 
 # TO DO
 
