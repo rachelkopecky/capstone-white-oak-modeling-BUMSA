@@ -49,9 +49,9 @@ The plot below shows the total White Oak inventory from 1968 through 2017, as re
 
 ```{r}
 # Read in and manipulate inventory data. These are the raw files from the US Forest service.
-inv23 <- read_csv("white_oak_inv_23.csv")
-inv24 <- read_csv("white_oak_inv_24.csv")
-inv33 <- read_csv("white_oak_inv_33.csv")
+inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
+inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
+inv33 <- read_csv("WhiteOakData/white_oak_inv_33.csv")
 
 inventory <- rbind(inv23, inv24, inv33)
 
@@ -79,7 +79,7 @@ The next plot shows the annual growth, removal, and mortality of the White Oak p
 
 ```{r}
 # Read in growth, removal, mortality data
-oak <- read_csv("white-oak-clean.csv")
+oak <- read_csv("WhiteOakData/white-oak-clean.csv")
 oak[is.na(oak)] <- 0
 
 oak %>% 
