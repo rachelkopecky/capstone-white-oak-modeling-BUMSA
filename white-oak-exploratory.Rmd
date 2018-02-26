@@ -134,6 +134,9 @@ oak_total %>%
        y = "Percent of Inventory",
        x = "Year") +
   theme_minimal()
+
+#Grab list of eastern states included in Oak data for use in other data sets
+eastern_states <- unique(oak$STATE_ABBR)
 ```
 
 We see a lot of variation in the growth and removal data during the time of the periodic collection method, and we see a lot of the trend smooth out in the early 2000s. From the plot above, we notice a downward trend in both growth and removal, while we see an upward trend in mortality. 
@@ -207,15 +210,53 @@ It is not easy to identify any real trend in the annual percent of drought land.
 
 The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
 
+Data: https://www.ncdc.noaa.gov/temp-and-precip/drought/historical-palmers/
+
 ```{r}
 pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
+pdsi_states <- read.csv("ClimateData/state_codes.csv")
 
 colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
 
-pdsi_data$State <- substr(pdsi_data$Division_Year, 1, nchar(pdsi_data$Division_Year)-8)
+#Parse our the state, division and year from code
+pdsi_data$State_code <- substr(pdsi_data$Division_Year, 1, nchar(pdsi_data$Division_Year)-8)
 pdsi_data$Division <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-7, nchar(pdsi_data$Division_Year)-6)
-pdsi_data$Unknown <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
+#pdsi_data$Unknown <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
 pdsi_data$Year <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-3, nchar(pdsi_data$Division_Year))
+
+#Convert state code to name
+pdsi_data <- merge(pdsi_data, pdsi_states)
+
+#Remove unnecessary columns
+pdsi_data <- pdsi_data[,-c(1:2)]
+
+#Replace missing values (-99.99) with NA
+pdsi_data[pdsi_data == '-99.99'] <- NA
+
+#Generate yearly average
+pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,1:12])
+
+#Generate Index based on state abbreviation and year
+pdsi_data$state_yr <- paste0(pdsi_data$Abbreviation, pdsi_data$Year)
+
+inventory_yr_state <- inventory %>% 
+        mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
+        group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
+        summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+
+inventory_pdsi <- merge(inventory_yr_state, pdsi_data[,17:18])
+
+#Average annual level by state
+pdsi_data %>% 
+        filter(Abbreviation %in% eastern_states) %>% 
+        filter(Year > 1968) %>% 
+        ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
+        geom_line() +
+        labs(title = "Annual Palmer Drought Serverity Index",
+             y = "Index",
+             x = "Year") +
+        theme_minimal()
+
 
 ```
 
