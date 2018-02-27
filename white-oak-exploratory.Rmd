@@ -234,8 +234,8 @@ division_area <- division_area[,-c(2:12)]
 division_area[division_area == 0] <- NA
 colnames(division_area) <- c("State_code","01","02","03","04","05","06","07","08","09","10")
 division_area_long <- gather(division_area, 
-                        Division,
-                        Percent_Ttl,
+                        "Division",
+                        "Percent_Ttl",
                         -State_code,
                         na.rm = TRUE)
 
@@ -283,15 +283,18 @@ inventory_yr_state <- oak_total %>%
 
 inventory_pdsi <- merge(inventory_yr_state, pdsi_state_year, by = "state_yr")
 
+
 inventory_pdsi %>% 
-        select(Abbreviation, Year, total_mortality, pdsi) %>% 
-        filter(Year >= 2005) %>% 
+        mutate(mortality_div = total_mortality/1000000) %>% 
+        select(Abbreviation, Year, mortality_div, pdsi) %>% 
+        filter(Year >= 2005)%>%
         gather("Measure",
                "Value",
-               -c(Abbreviation, Year)) %>% 
+               -Abbreviation, 
+               -Year) %>% 
         filter(Abbreviation == 'AL') %>% 
         #filter(Measure == "total_mortality") %>% 
-        ggplot(aes(x = Year, y = Value, colour = Measure, group = 1)) +
+        ggplot(aes(x = Year, y = Value, colour = Measure, group = Measure)) +
                 geom_line() +
                 labs(title = "Yearly Mortality and PDSI",
                      y = "Measure",
