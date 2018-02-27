@@ -23,6 +23,7 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 library(tibbletime)
+library(utf8)
 ```
 
 # Data
@@ -107,7 +108,11 @@ oak_merge <- oak %>%
   group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
   summarise(total_removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE),
             total_growth = sum(SELECT_WHITE_OAK_GROWTH, na.rm = TRUE),
-            total_mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE))
+            total_mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE)) %>% 
+  mutate(total_growth_true = total_growth + total_mortality)
+
+oak_merge$total_growth <- NULL
+colnames(oak_merge)[6] <- "total_growth"
 
 inventory_merge <- inventory %>% 
   group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
@@ -117,10 +122,10 @@ oak_total <- merge(oak_merge, inventory_merge, by = c("STATE_ABBR", "EVAL_GRP_YE
 
 oak_total %>% 
   group_by(EVAL_GRP_YEAR) %>% 
-  summarise(total_growth = sum(total_growth),
-            total_removal = sum(total_removal),
-            total_mortality = sum(total_mortality),
-            total_inventory = sum(total_inventory)) %>% 
+  summarise(total_growth = sum(total_growth, na.rm = TRUE),
+            total_removal = sum(total_removal, na.rm = TRUE),
+            total_mortality = sum(total_mortality, na.rm = TRUE),
+            total_inventory = sum(total_inventory, na.rm = TRUE)) %>% 
   mutate(removal_pct_inventory = total_removal/total_inventory,
          growth_pct_inventory = total_growth/total_inventory,
          mortality_pct_inventory = total_mortality/total_inventory) %>% 
@@ -239,25 +244,48 @@ pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,1:12])
 #Generate Index based on state abbreviation and year
 pdsi_data$state_yr <- paste0(pdsi_data$Abbreviation, pdsi_data$Year)
 
-inventory_yr_state <- inventory %>% 
-        mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
-        group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
-        summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+#inventory_yr_state <- inventory %>% 
+        # mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
+        # group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
+        # summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
 
-inventory_pdsi <- merge(inventory_yr_state, pdsi_data[,17:18])
+#inventory_pdsi <- merge(inventory_yr_state, pdsi_data[,17:18])
+
+colnames(pdsi_data)[14] <- "EVAL_GRP_YEAR"  
+colnames(pdsi_data)[16] <- "STATE_ABBR"
+        
+oak_total <- merge(oak_total, pdsi_data, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
+oak_total <- oak_total[,c(1:7, 22)]
+colnames(oak_total)[8] <- "yearly_avg_pdsi"
 
 #Average annual level by state
-pdsi_data %>% 
-        filter(Abbreviation %in% eastern_states) %>% 
-        filter(Year > 1968) %>% 
-        ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
-        geom_line() +
-        labs(title = "Annual Palmer Drought Serverity Index",
-             y = "Index",
-             x = "Year") +
-        theme_minimal()
+# pdsi_data %>% 
+#         filter(Abbreviation %in% eastern_states) %>% 
+#         filter(Year > 1968) %>% 
+#         ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
+#         geom_line() +
+#         labs(title = "Annual Palmer Drought Serverity Index",
+#              y = "Index",
+#              x = "Year") +
+#         theme_minimal()
 
+oak_pdsi_summary <- oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(total_removal, na.rm = TRUE),
+            total_growth = sum(total_growth, na.rm = TRUE),
+            total_mortality = sum(total_mortality, na.rm = TRUE),
+            total_inventory = sum(total_inventory, na.rm = TRUE),
+            avg_pdsi = mean(yearly_avg_pdsi, na.rm = TRUE))
 
+pdsi_growth_mod <- lm(total_growth ~ avg_pdsi, data = oak_pdsi_summary)
+plot(total_growth ~ avg_pdsi, data = oak_pdsi_summary)
+summary(pdsi_growth_mod)
+cor.test(oak_pdsi_summary$total_growth, oak_pdsi_summary$avg_pdsi)
+
+pdsi_mortality_mod <- lm(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
+plot(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
+summary(pdsi_mortality_mod)
+cor.test(oak_pdsi_summary$total_mortality, oak_pdsi_summary$avg_pdsi)
 ```
 
 # TO DO
