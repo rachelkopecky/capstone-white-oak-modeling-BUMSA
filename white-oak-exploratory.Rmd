@@ -174,43 +174,6 @@ urban_area %>%
 
 Although we do not have annual values, there is a clear upward trend in the urban land area. Hopefully we will be able to find additional data and/or a valid method for interpolating these values.
 
-### Drought
-
-#### Percent of Drought Land
-
-We also wanted to see if the percent of land under various drought conditions has any relation to white oak growth, mortality, and removal.
-
-```{r}
-drought_national <- read_csv("ClimateData/drought_national.csv")
-
-drought_national$ReleaseDate <- as.character(drought_national$ReleaseDate)
-drought_national$ReleaseDate <- as.Date(drought_national$ReleaseDate, "%Y%m%d")
-
-drought_national_annual <- drought_national %>% 
-  arrange(ReleaseDate) %>% 
-  mutate(Date = collapse_index(ReleaseDate, "yearly")) %>% 
-  group_by(Date) %>% 
-  summarise(None = mean(None), 
-            D0 = mean(D0),
-            D1 = mean(D1),
-            D2 = mean(D2),
-            D3 = mean(D3),
-            D4 = mean(D4))
-
-drought_national_annual %>% 
-  gather("type",
-         "percent",
-         -Date) %>% 
-  ggplot(aes(x = Date, y = percent, colour = type)) +
-  geom_line() +
-  labs(title = "Annual Percent of Drought Land",
-       y = "Percent of Drought Land",
-       x = "Year") +
-  theme_minimal()
-```
-
-It is not easy to identify any real trend in the annual percent of drought land. This type of data may not make sense at an annual level, as we had to take the mean of weekly data, and any variation/trend may have been washed out in the average.
-
 #### Palmer Drought Severity Index
 
 The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
@@ -287,6 +250,52 @@ plot(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
 summary(pdsi_mortality_mod)
 cor.test(oak_pdsi_summary$total_mortality, oak_pdsi_summary$avg_pdsi)
 ```
+
+
+#### Building Permits
+
+As the number of building permits increases, we would expect this to potentially reduce the White Oak population, both for urbanization reasons and for the demand of White Oak within the construction and housing professions. 
+
+```{r}
+permits <- read_csv("UrbanizationData/BuildingPermits.csv")
+
+colnames(permits)[1] <- "State"
+
+permits <- merge(permits, pdsi_states, by = "State")
+
+permits <- select(permits, Abbreviation, Year, Permits)
+
+colnames(permits) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "total_permits")
+
+permits_inventory <- merge(oak_total, permits, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
+
+permits_inventory_summary <- permits_inventory %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_growth = sum(total_growth, na.rm = TRUE),
+            total_removal = sum(total_removal, na.rm = TRUE),
+            total_mortality = sum(total_mortality, na.rm = TRUE),
+            total_inventory = sum(total_inventory, na.rm = TRUE),
+            total_permits = sum(total_permits, na.rm = TRUE))
+
+cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total_permits)
+# Removal and permits are SIGNIFICANTLY correlated
+cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
+cor.test(permits_inventory_summary$total_mortality, permits_inventory_summary$total_permits)
+cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$total_permits)
+
+```
+
+# Models
+
+### Hazard / Survival Model
+
+The US Forest Service was able to provide additional detail on growth that came from new plants for the annual data (years 2001 through 2017). Although we now have this distinction, this time period may not be long enough for us to adequately produce a hazard function considering the lifespan of a White Oak tree is longer than 13 years. We also do not have the detail on when a specific tree that was new in 2001 died (either from mortality or removal). We will need to do more research and have further discussion on whether this is even a viable method to consider. 
+
+### Time Series Analysis
+
+
+
+### Cross-Sectional Analysis
 
 # TO DO
 
