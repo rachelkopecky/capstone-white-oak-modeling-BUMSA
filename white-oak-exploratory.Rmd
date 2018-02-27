@@ -208,12 +208,37 @@ It is not easy to identify any real trend in the annual percent of drought land.
 
 #### Palmer Drought Severity Index
 
-The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
+The Palmer Drought Severity Index is a measure of dryness in a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points up to +/- 7.
 
 Data: https://www.ncdc.noaa.gov/temp-and-precip/drought/historical-palmers/
 
 ```{r}
 pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
+#Explore a link to the data files online to allow update numbers as necessary
+#Need to read 'procdate.txt' to get date then append it to the necessary file
+#ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/
+
+#Read in file of county FIPS codes to state_division code
+#climate_div_cty <- read.csv("ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/cd_county_join.txt", 
+#                            header = FALSE,
+#                            stringsAsFactors = FALSE)
+#climate_div_cty <- separate(climate_div_cty, 
+#         col = 'V1',
+#         into = c("State_Div", "County"),
+#         remove = TRUE,
+#         fill = 'right')
+
+#Read in divisional area in sq mi and percent
+division_area <- read.csv("ClimateData/division_area.csv")
+division_area <- division_area[,-c(2:12)]
+division_area[division_area == 0] <- NA
+colnames(division_area) <- c("State_code","01","02","03","04","05","06","07","08","09","10")
+division_area_long <- gather(division_area, 
+                        Division,
+                        Percent_Ttl,
+                        -State_code,
+                        na.rm = TRUE)
+
 pdsi_states <- read.csv("ClimateData/state_codes.csv")
 
 colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
@@ -221,42 +246,70 @@ colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Ju
 #Parse our the state, division and year from code
 pdsi_data$State_code <- substr(pdsi_data$Division_Year, 1, nchar(pdsi_data$Division_Year)-8)
 pdsi_data$Division <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-7, nchar(pdsi_data$Division_Year)-6)
-#pdsi_data$Unknown <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
+pdsi_data$Element_Code <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
 pdsi_data$Year <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-3, nchar(pdsi_data$Division_Year))
 
 #Convert state code to name
 pdsi_data <- merge(pdsi_data, pdsi_states)
-
-#Remove unnecessary columns
-pdsi_data <- pdsi_data[,-c(1:2)]
+#division_area_long <- merge(division_area_long, pdsi_states, by = "State_code")
 
 #Replace missing values (-99.99) with NA
 pdsi_data[pdsi_data == '-99.99'] <- NA
 
 #Generate yearly average
-pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,1:12])
+pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,3:14])
+
+#Remove unnecessary columns
+pdsi_data_yearly <- pdsi_data[,-c(2:14)]
+
+#Merge land percentages with PDSI
+pdsi_data_yearly <- merge(pdsi_data_yearly, division_area_long, by = c("State_code", "Division"))
+
+#Create Yearly State Total PDSI based on weighted divisions
+pdsi_state_year <- pdsi_data_yearly %>% 
+        group_by(Abbreviation, Year) %>% 
+        summarise(pdsi = sum(Yearly_Avg * Percent_Ttl))
 
 #Generate Index based on state abbreviation and year
-pdsi_data$state_yr <- paste0(pdsi_data$Abbreviation, pdsi_data$Year)
+pdsi_state_year$state_yr <- paste0(pdsi_state_year$Abbreviation, pdsi_state_year$Year)
 
-inventory_yr_state <- inventory %>% 
+inventory_yr_state <- oak_total %>% 
         mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
         group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
-        summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+        summarise(total_growth = sum(total_growth),
+                  total_removal = sum(total_removal),
+                  total_mortality = sum(total_mortality),
+                  total_inventory = sum(total_inventory))
 
-inventory_pdsi <- merge(inventory_yr_state, pdsi_data[,17:18])
+inventory_pdsi <- merge(inventory_yr_state, pdsi_state_year, by = "state_yr")
+
+inventory_pdsi %>% 
+        select(Abbreviation, Year, total_mortality, pdsi) %>% 
+        filter(Year >= 2005) %>% 
+        gather("Measure",
+               "Value",
+               -c(Abbreviation, Year)) %>% 
+        filter(Abbreviation == 'AL') %>% 
+        #filter(Measure == "total_mortality") %>% 
+        ggplot(aes(x = Year, y = Value, colour = Measure, group = 1)) +
+                geom_line() +
+                labs(title = "Yearly Mortality and PDSI",
+                     y = "Measure",
+                     x = "Year") +
+                theme_minimal()
 
 #Average annual level by state
-pdsi_data %>% 
-        filter(Abbreviation %in% eastern_states) %>% 
-        filter(Year > 1968) %>% 
-        ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
-        geom_line() +
-        labs(title = "Annual Palmer Drought Serverity Index",
-             y = "Index",
-             x = "Year") +
-        theme_minimal()
+#pdsi_data %>% 
+#        filter(Abbreviation %in% eastern_states) %>% 
+#        filter(Year > 1968) %>% 
+#        ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
+#        geom_line() +
+#        labs(title = "Annual Palmer Drought Serverity Index",
+#             y = "Index",
+#             x = "Year") +
+#        theme_minimal()
 
+cor(inventory_pdsi$total_inventory, inventory_pdsi$pdsi)
 
 ```
 
