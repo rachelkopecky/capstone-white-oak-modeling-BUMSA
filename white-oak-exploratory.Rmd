@@ -289,11 +289,6 @@ inventory_yr_state <- oak_total %>%
 
 inventory_pdsi <- merge(inventory_yr_state, pdsi_state_year, by = "state_yr")
 
-inv_pdsi_cor <- inventory_pdsi %>% 
-        select(total_growth:total_inventory, pdsi)
-
-#corrplot(cor(inv_pdsi_cor))
-
 inventory_pdsi %>% 
         mutate(mortality_div = total_mortality/1000000) %>% 
         select(Abbreviation, Year, mortality_div, pdsi) %>% 
@@ -320,8 +315,6 @@ inventory_pdsi %>%
 #             y = "Index",
 #             x = "Year") +
 #        theme_minimal()
-
-cor(inventory_pdsi$total_inventory, inventory_pdsi$pdsi)
 
 ```
 
