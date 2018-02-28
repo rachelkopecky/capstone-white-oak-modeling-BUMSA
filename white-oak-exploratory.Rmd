@@ -285,6 +285,69 @@ cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$to
 
 ```
 
+#### Natural Disasters
+
+```{r}
+nd_2000 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2000_c20170717.csv")
+nd_2001 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2001_c20170717.csv")
+nd_2002 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2002_c20170717.csv")
+nd_2003 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2003_c20170717.csv")
+nd_2004 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2004_c20170717.csv")
+nd_2005 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2005_c20170717.csv")
+nd_2006 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2006_c20170717.csv")
+nd_2007 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2007_c20170717.csv")
+nd_2008 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2008_c20170718.csv")
+nd_2009 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2009_c20170816.csv")
+nd_2010 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2010_c20170726.csv")
+nd_2011 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2011_c20170519.csv")
+nd_2012 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2012_c20170519.csv")
+nd_2013 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2013_c20170519.csv")
+nd_2014 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2014_c20170718.csv")
+
+nd_all <- rbind(nd_2000,
+                nd_2001,
+                nd_2002,
+                nd_2003,
+                nd_2004,
+                nd_2005,
+                nd_2006,
+                nd_2007,
+                nd_2008,
+                nd_2009,
+                nd_2010,
+                nd_2011,
+                nd_2012,
+                nd_2013,
+                nd_2014)
+
+rm(nd_2000,
+   nd_2001,
+   nd_2002,
+   nd_2003,
+   nd_2004,
+   nd_2005,
+   nd_2006,
+   nd_2007,
+   nd_2008,
+   nd_2009,
+   nd_2010,
+   nd_2011,
+   nd_2012,
+   nd_2013,
+   nd_2014)
+
+wildfire <- nd_all %>% 
+  filter(EVENT_TYPE == "Wildfire")
+
+flood <- nd_all %>% 
+  filter(EVENT_TYPE == "Flood")
+
+freeze <- nd_all %>% 
+  filter(EVENT_TYPE == "Frost/Freeze")
+
+tornado <- nd_all %>% 
+  filter(EVENT_TYPE == "Tornado")
+```
 # Models
 
 ### Hazard / Survival Model
