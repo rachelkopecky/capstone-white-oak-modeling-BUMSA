@@ -336,18 +336,54 @@ rm(nd_2000,
    nd_2013,
    nd_2014)
 
-wildfire <- nd_all %>% 
-  filter(EVENT_TYPE == "Wildfire")
+nd_all_fix <- nd_all
+nd_all_fix$property_damage <- gsub("k", "000", nd_all$DAMAGE_PROPERTY, ignore.case = TRUE)
+nd_all_fix <- nd_all_fix %>% 
+  mutate(property_damage = gsub("m", "000000", nd_all_fix$property_damage, ignore.case = TRUE),
+         property_damage = ifelse(grepl("\\.", nd_all_fix$property_damage) == TRUE,
+                                       str_sub(nd_all_fix$property_damage, 1, -2), 
+                                       nd_all_fix$property_damage),
+         property_damage = gsub("\\.", "", nd_all_fix$property_damage),
+         property_damage = as.numeric(property_damage))
 
-flood <- nd_all %>% 
-  filter(EVENT_TYPE == "Flood")
+wildfire <- nd_all_fix %>% 
+  filter(EVENT_TYPE == "Wildfire") 
 
-freeze <- nd_all %>% 
-  filter(EVENT_TYPE == "Frost/Freeze")
+wildfire %>% 
+  group_by(YEAR) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  ggplot(aes(x = YEAR, y = total_damage)) +
+  geom_line()
 
-tornado <- nd_all %>% 
+flood <- nd_all_fix %>% 
+  filter(EVENT_TYPE == "Flood") 
+
+flood %>% 
+  group_by(YEAR) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  ggplot(aes(x = YEAR, y = total_damage)) +
+  geom_line()
+
+freeze <- nd_all_fix %>% 
+  filter(EVENT_TYPE == "Frost/Freeze") 
+
+freeze %>% 
+  group_by(YEAR) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  ggplot(aes(x = YEAR, y = total_damage)) +
+  geom_line()
+
+tornado <- nd_all_fix %>% 
   filter(EVENT_TYPE == "Tornado")
+
+tornado %>% 
+  group_by(YEAR) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  ggplot(aes(x = YEAR, y = total_damage)) +
+  geom_line()
+
 ```
+
 # Models
 
 ### Hazard / Survival Model
