@@ -2,9 +2,11 @@
 title: "White Oak Exploration"
 author: "Paul Forst, Tammy Hang, Rachel Kopecky, Jack Letcher, Ian O'Connor"
 output:
-  pdf_document:
+  html_document:
+    theme: sandstone
     toc: yes
-    toc_depth: '4'
+    toc_depth: 4
+    toc_float: yes
   html_notebook:
     fig_caption: yes
     highlight: textmate
@@ -12,11 +14,9 @@ output:
     toc: yes
     toc_depth: 4
     toc_float: yes
-  html_document:
-    theme: sandstone
+  pdf_document:
     toc: yes
-    toc_depth: 4
-    toc_float: yes
+    toc_depth: '4'
 ---
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
@@ -144,6 +144,32 @@ eastern_states <- unique(oak$STATE_ABBR)
 
 We see a lot of variation in the growth and removal data during the time of the periodic collection method, and we see a lot of the trend smooth out in the early 2000s. From the plot above, we notice a downward trend in both growth and removal, while we see an upward trend in mortality. 
 
+To properly weight our other potential factors on a national level, we need to know the percentage of oak inventory in each state. 
+
+```{r}
+#Generate percent of total population by state
+oak_yearly <- oak_total %>% 
+        group_by(EVAL_GRP_YEAR) %>% 
+        summarise(national_inventory = sum(total_inventory),
+                  national_growth = sum(total_growth),
+                  national_mortality = sum(total_mortality),
+                  national_removal = sum(total_removal))
+
+oak_state_year <- oak_total %>% 
+        group_by(STATE_ABBR, EVAL_GRP_YEAR) %>% 
+        summarise(state_inventory = sum(total_inventory),
+                  state_growth = sum(total_growth),
+                  state_mortality = sum(total_mortality),
+                  state_removal = sum(total_removal)) %>% 
+        merge(oak_yearly, by = "EVAL_GRP_YEAR") %>% 
+        mutate(perc_inventory = state_inventory / national_inventory,
+               perc_growth = state_growth / national_growth,
+               perc_mortality = state_mortality / national_mortality,
+               perc_removal = state_removal / national_removal)
+
+```
+
+
 ### Urbanization
 
 #### Urban Land Area
@@ -209,7 +235,7 @@ drought_national_annual %>%
 
 It is not easy to identify any real trend in the annual percent of drought land. This type of data may not make sense at an annual level, as we had to take the mean of weekly data, and any variation/trend may have been washed out in the average.
 
-#### Palmer Drought Severity Index
+#### Palmer Drought Severity Index (PDSI)
 
 The Palmer Drought Severity Index is a measure of dryness in a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points up to +/- 7.
 
@@ -300,9 +326,10 @@ inventory_pdsi %>%
         filter(Abbreviation == 'AL') %>% 
         ggplot(aes(x = Year, y = Value, colour = Measure, group = Measure)) +
                 geom_line() +
-                labs(title = "Yearly Mortality and PDSI",
+                labs(title = "Yearly Mortality and PDSI for Alabama",
                      y = "Measure",
                      x = "Year") +
+        scale_colour_manual(labels = c("Mortality (in millions)", "PDSI"), values = c("darkblue", "red")) +
                 theme_minimal()
 
 #Average annual level by state
