@@ -2,14 +2,17 @@
 title: "White Oak Exploration"
 author: "Paul Forst, Tammy Hang, Rachel Kopecky, Jack Letcher, Ian O'Connor"
 output:
-  html_document:
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  html_notebook:
+    fig_caption: yes
+    highlight: textmate
     theme: sandstone
     toc: yes
     toc_depth: 4
     toc_float: yes
-  html_notebook:
-    fig_caption: yes
-    highlight: textmate
+  html_document:
     theme: sandstone
     toc: yes
     toc_depth: 4
@@ -229,15 +232,18 @@ pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header =
 #         fill = 'right')
 
 #Read in divisional area in sq mi and percent
-division_area <- read.csv("ClimateData/division_area.csv")
-division_area <- division_area[,-c(2:12)]
+division_area <- read_tsv("ClimateData/division_area.txt")
 division_area[division_area == 0] <- NA
-colnames(division_area) <- c("State_code","01","02","03","04","05","06","07","08","09","10")
-division_area_long <- gather(division_area, 
-                        "Division",
-                        "Percent_Ttl",
-                        -State_code,
-                        na.rm = TRUE)
+division_area <- division_area[-nrow(division_area),]
+colnames(division_area) <- c("State_code","01","02","03","04","05","06","07","08","09","10","Total")
+division_area$State_code <- as.character(as.numeric(division_area$State_code))
+division_area_long <- division_area %>%
+        gather(Division, 
+               "LandArea",
+               -c(State_code, Total),
+               na.rm = TRUE) %>% 
+        group_by(State_code, Division) %>% 
+        summarise(percent_land = LandArea / Total)
 
 pdsi_states <- read.csv("ClimateData/state_codes.csv")
 
@@ -268,7 +274,7 @@ pdsi_data_yearly <- merge(pdsi_data_yearly, division_area_long, by = c("State_co
 #Create Yearly State Total PDSI based on weighted divisions
 pdsi_state_year <- pdsi_data_yearly %>% 
         group_by(Abbreviation, Year) %>% 
-        summarise(pdsi = sum(Yearly_Avg * Percent_Ttl))
+        summarise(pdsi = sum(Yearly_Avg * percent_land))
 
 #Generate Index based on state abbreviation and year
 pdsi_state_year$state_yr <- paste0(pdsi_state_year$Abbreviation, pdsi_state_year$Year)
@@ -283,6 +289,10 @@ inventory_yr_state <- oak_total %>%
 
 inventory_pdsi <- merge(inventory_yr_state, pdsi_state_year, by = "state_yr")
 
+inv_pdsi_cor <- inventory_pdsi %>% 
+        select(total_growth:total_inventory, pdsi)
+
+#corrplot(cor(inv_pdsi_cor))
 
 inventory_pdsi %>% 
         mutate(mortality_div = total_mortality/1000000) %>% 
@@ -293,7 +303,6 @@ inventory_pdsi %>%
                -Abbreviation, 
                -Year) %>% 
         filter(Abbreviation == 'AL') %>% 
-        #filter(Measure == "total_mortality") %>% 
         ggplot(aes(x = Year, y = Value, colour = Measure, group = Measure)) +
                 geom_line() +
                 labs(title = "Yearly Mortality and PDSI",
