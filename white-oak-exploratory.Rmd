@@ -24,6 +24,7 @@ library(ggplot2)
 library(readr)
 library(tibbletime)
 library(utf8)
+library(stringr)
 ```
 
 # Data
@@ -174,7 +175,7 @@ urban_area %>%
 
 Although we do not have annual values, there is a clear upward trend in the urban land area. Hopefully we will be able to find additional data and/or a valid method for interpolating these values.
 
-#### Palmer Drought Severity Index
+### Palmer Drought Severity Index
 
 The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
 
@@ -252,7 +253,7 @@ cor.test(oak_pdsi_summary$total_mortality, oak_pdsi_summary$avg_pdsi)
 ```
 
 
-#### Building Permits
+### Building Permits
 
 As the number of building permits increases, we would expect this to potentially reduce the White Oak population, both for urbanization reasons and for the demand of White Oak within the construction and housing professions. 
 
@@ -277,6 +278,10 @@ permits_inventory_summary <- permits_inventory %>%
             total_inventory = sum(total_inventory, na.rm = TRUE),
             total_permits = sum(total_permits, na.rm = TRUE))
 
+permits_inventory_summary %>% 
+  ggplot(aes(x = EVAL_GRP_YEAR, y = total_permits)) +
+  geom_line()
+
 cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total_permits)
 # Removal and permits are SIGNIFICANTLY correlated
 cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
@@ -285,7 +290,13 @@ cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$to
 
 ```
 
-#### Natural Disasters
+We can see that White Oak removal, mortality, and inventory are all significantly correlated to the number of building permits. A significant, positive correlation does not necessarily make sense for total inventory, as we would expect that as removal increases with the construction of new buildings, the overall inventory would decrease. This is something that will require further research and analysis in order to determine the expected sign on this correlation.n
+
+### Natural Disasters
+
+Another outside factor that can potentially influence the White Oak population are natural disasters. A dataset found at [data.gov](https://catalog.data.gov/dataset/ncdc-storm-events-database) includes monthly detail, by state, for various natural disaster events. A quantifiable metric within this dataset is total damage to property, expressed in terms of US dollars. Although this is not the exact metric that we would like to analyze when comparing natural disasters to the White Oak population (we would prefer acreage of damaged land, or a similar metric), it still has the potential to provide some insight into the relationship between various natural disasters and White Oak mortality.
+
+#### Wildfires
 
 ```{r}
 nd_2000 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2000_c20170717.csv")
@@ -349,38 +360,83 @@ nd_all_fix <- nd_all_fix %>%
 wildfire <- nd_all_fix %>% 
   filter(EVENT_TYPE == "Wildfire") 
 
-wildfire %>% 
+wildfire_roll <- wildfire %>% 
   group_by(YEAR) %>% 
-  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE))
+
+wildfire_roll %>% 
   ggplot(aes(x = YEAR, y = total_damage)) +
   geom_line()
 
+colnames(wildfire_roll)[1] <- "EVAL_GRP_YEAR"
+
+wildfire_oak <- oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(as.numeric(total_removal), na.rm = TRUE),
+            total_growth = sum(as.numeric(total_growth), na.rm = TRUE),
+            total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
+            total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
+  merge(., wildfire_roll, by = "EVAL_GRP_YEAR")
+
+cor.test(wildfire_oak$total_damage, wildfire_oak$total_mortality)
+```
+
+There is significant correlation between the damage caused by wildfires and White Oak mortality.
+
+#### Floods
+
+```{r}
 flood <- nd_all_fix %>% 
   filter(EVENT_TYPE == "Flood") 
 
-flood %>% 
+flood_roll <- flood %>% 
   group_by(YEAR) %>% 
-  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE))
+
+flood_roll %>% 
   ggplot(aes(x = YEAR, y = total_damage)) +
   geom_line()
 
-freeze <- nd_all_fix %>% 
-  filter(EVENT_TYPE == "Frost/Freeze") 
+colnames(flood_roll)[1] <- "EVAL_GRP_YEAR"
 
-freeze %>% 
-  group_by(YEAR) %>% 
-  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
-  ggplot(aes(x = YEAR, y = total_damage)) +
-  geom_line()
+flood_oak <- oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(as.numeric(total_removal), na.rm = TRUE),
+            total_growth = sum(as.numeric(total_growth), na.rm = TRUE),
+            total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
+            total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
+  merge(., flood_roll, by = "EVAL_GRP_YEAR")
 
+cor.test(flood_oak$total_damage, flood_oak$total_mortality)
+```
+
+There is significant correlation between the damage caused by flood and White Oak mortality.
+
+#### Tornados
+
+```{r}
 tornado <- nd_all_fix %>% 
   filter(EVENT_TYPE == "Tornado")
 
-tornado %>% 
+tornado_roll <- tornado %>% 
   group_by(YEAR) %>% 
-  summarise(total_damage = sum(property_damage, na.rm = TRUE)) %>% 
+  summarise(total_damage = sum(property_damage, na.rm = TRUE))
+
+tornado_roll %>% 
   ggplot(aes(x = YEAR, y = total_damage)) +
   geom_line()
+
+colnames(tornado_roll)[1] <- "EVAL_GRP_YEAR"
+
+tornado_oak <- oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(as.numeric(total_removal), na.rm = TRUE),
+            total_growth = sum(as.numeric(total_growth), na.rm = TRUE),
+            total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
+            total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
+  merge(., wildfire_roll, by = "EVAL_GRP_YEAR")
+
+cor.test(tornado_oak$total_damage, tornado_oak$total_mortality)
 
 ```
 # Invasive Species/Pest
@@ -413,6 +469,10 @@ pest_output %>%
 
 
 
+There is significant correlation between the property damage caused by tornados and White Oak mortality.
+
+As an initial pass through the natural disaster data, it is clear that there are some events that have significant, positive correlation with the White Oak mortality. There are other events included in the dataset that might also be valuable to examine, such as excessive heat events (in place of climate data), or some of the aggressive storm types.
+
 # Models
 
 ### Hazard / Survival Model
@@ -428,3 +488,5 @@ The US Forest Service was able to provide additional detail on growth that came 
 # TO DO
 
 * Filter urbanization and drought land data to include only the Eastern states that are relevant to the White Oak analysis. This may or may not impact any correlation in trends that we see.
+
+* When rolling to the national level, use weighted averages by % of White Oak population.
