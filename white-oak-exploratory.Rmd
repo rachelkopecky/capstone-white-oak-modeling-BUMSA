@@ -23,6 +23,7 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 library(tibbletime)
+library(corrplot)
 library(utf8)
 library(stringr)
 ```
@@ -32,14 +33,6 @@ library(stringr)
 ### White Oak
 
 The White Oak data used for this analysis was received from the U.S. Forest Service (USFS). The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern United States, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1968 through 2017.
-
-### Climate
-
-### Drought
-
-### Urbanization
-
-### Invasive Species
 
 # Exploration
 
@@ -147,6 +140,31 @@ eastern_states <- unique(oak$STATE_ABBR)
 
 We see a lot of variation in the growth and removal data during the time of the periodic collection method, and we see a lot of the trend smooth out in the early 2000s. From the plot above, we notice a downward trend in both growth and removal, while we see an upward trend in mortality. 
 
+To properly weight our other potential factors on a national level, we need to know the percentage of oak inventory in each state. 
+
+```{r}
+#Generate percent of total population by state
+oak_yearly <- oak_total %>% 
+        group_by(EVAL_GRP_YEAR) %>% 
+        summarise(national_inventory = sum(total_inventory),
+                  national_growth = sum(total_growth),
+                  national_mortality = sum(total_mortality),
+                  national_removal = sum(total_removal))
+
+oak_state_year <- oak_total %>% 
+        group_by(STATE_ABBR, EVAL_GRP_YEAR) %>% 
+        summarise(state_inventory = sum(total_inventory),
+                  state_growth = sum(total_growth),
+                  state_mortality = sum(total_mortality),
+                  state_removal = sum(total_removal)) %>% 
+        merge(oak_yearly, by = "EVAL_GRP_YEAR") %>% 
+        mutate(perc_inventory = state_inventory / national_inventory,
+               perc_growth = state_growth / national_growth,
+               perc_mortality = state_mortality / national_mortality,
+               perc_removal = state_removal / national_removal)
+```
+
+
 ### Urbanization
 
 #### Urban Land Area
@@ -175,14 +193,38 @@ urban_area %>%
 
 Although we do not have annual values, there is a clear upward trend in the urban land area. Hopefully we will be able to find additional data and/or a valid method for interpolating these values.
 
-### Palmer Drought Severity Index
+### Drought
 
-The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
+#### Palmer Drought Severity Index (PDSI)
+The Palmer Drought Severity Index is a measure of dryness in a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points up to +/- 7.
 
 Data: https://www.ncdc.noaa.gov/temp-and-precip/drought/historical-palmers/
 
 ```{r}
 pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
+#Explore a link to the data files online to allow update numbers as necessary
+#Need to read 'procdate.txt' to get date then append it to the necessary file
+#ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/
+
+#Read in file of county FIPS codes to state_division code
+#climate_div_cty <- read.csv("ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/cd_county_join.txt", 
+#                            header = FALSE,
+#                            stringsAsFactors = FALSE)
+
+#Read in divisional area in sq mi and percent
+division_area <- read_csv("ClimateData/division_area.csv")
+division_area[division_area == 0] <- NA
+division_area <- division_area[-nrow(division_area),]
+colnames(division_area)[1:12] <- c("State_code","01","02","03","04","05","06","07","08","09","10","Total")
+division_area$State_code <- as.character(as.numeric(division_area$State_code))
+division_area_long <- division_area %>%
+        gather(Division, 
+               "LandArea",
+               -c(State_code, Total),
+               na.rm = TRUE) %>% 
+        group_by(State_code, Division) %>% 
+        summarise(percent_land = LandArea / Total)
+
 pdsi_states <- read.csv("ClimateData/state_codes.csv")
 
 colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
@@ -190,68 +232,172 @@ colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Ju
 #Parse our the state, division and year from code
 pdsi_data$State_code <- substr(pdsi_data$Division_Year, 1, nchar(pdsi_data$Division_Year)-8)
 pdsi_data$Division <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-7, nchar(pdsi_data$Division_Year)-6)
-#pdsi_data$Unknown <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
+pdsi_data$Element_Code <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
 pdsi_data$Year <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-3, nchar(pdsi_data$Division_Year))
 
 #Convert state code to name
 pdsi_data <- merge(pdsi_data, pdsi_states)
-
-#Remove unnecessary columns
-pdsi_data <- pdsi_data[,-c(1:2)]
+#division_area_long <- merge(division_area_long, pdsi_states, by = "State_code")
 
 #Replace missing values (-99.99) with NA
 pdsi_data[pdsi_data == '-99.99'] <- NA
 
 #Generate yearly average
-pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,1:12])
+pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,3:14], na.rm = TRUE)
 
-#Generate Index based on state abbreviation and year
-pdsi_data$state_yr <- paste0(pdsi_data$Abbreviation, pdsi_data$Year)
+#Remove unnecessary columns
+pdsi_data_yearly <- pdsi_data[,-c(2:14)]
 
-#inventory_yr_state <- inventory %>% 
-        # mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
-        # group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
-        # summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+#Merge land percentages with PDSI
+pdsi_data_yearly <- merge(pdsi_data_yearly, division_area_long, by = c("State_code", "Division"))
 
-#inventory_pdsi <- merge(inventory_yr_state, pdsi_data[,17:18])
+#Create Yearly State Total PDSI based on weighted divisions
+pdsi_state_year <- pdsi_data_yearly %>% 
+        group_by(Abbreviation, Year) %>% 
+        summarise(pdsi = sum(Yearly_Avg * percent_land))
 
-colnames(pdsi_data)[14] <- "EVAL_GRP_YEAR"  
-colnames(pdsi_data)[16] <- "STATE_ABBR"
-        
-oak_total <- merge(oak_total, pdsi_data, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
-oak_total <- oak_total[,c(1:7, 22)]
-colnames(oak_total)[8] <- "yearly_avg_pdsi"
+colnames(pdsi_state_year) <- c("STATE_ABBR","EVAL_GRP_YEAR", "yearly_avg_pdsi")
+   
+#Join oak and PDSI data     
+oak_state_year <- merge(oak_state_year, pdsi_state_year, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
 
-#Average annual level by state
-# pdsi_data %>% 
-#         filter(Abbreviation %in% eastern_states) %>% 
-#         filter(Year > 1968) %>% 
-#         ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
-#         geom_line() +
-#         labs(title = "Annual Palmer Drought Serverity Index",
-#              y = "Index",
-#              x = "Year") +
-#         theme_minimal()
-
-oak_pdsi_summary <- oak_total %>% 
+oak_pdsi_summary <- oak_state_year %>% 
   group_by(EVAL_GRP_YEAR) %>% 
-  summarise(total_removal = sum(total_removal, na.rm = TRUE),
-            total_growth = sum(total_growth, na.rm = TRUE),
-            total_mortality = sum(total_mortality, na.rm = TRUE),
-            total_inventory = sum(total_inventory, na.rm = TRUE),
-            avg_pdsi = mean(yearly_avg_pdsi, na.rm = TRUE))
+  summarise(total_removal = sum(state_removal, na.rm = TRUE),
+            total_growth = sum(state_growth, na.rm = TRUE),
+            total_mortality = sum(state_mortality, na.rm = TRUE),
+            total_inventory = sum(state_inventory, na.rm = TRUE),
+            avg_inv_pdsi = sum(yearly_avg_pdsi * perc_inventory, na.rm = TRUE),
+            avg_gth_pdsi = sum(yearly_avg_pdsi * perc_growth, na.rm = TRUE),
+            avg_mor_pdsi = sum(yearly_avg_pdsi * perc_mortality, na.rm = TRUE),
+            avg_rem_pdsi = sum(yearly_avg_pdsi * perc_removal, na.rm = TRUE))
 
-pdsi_growth_mod <- lm(total_growth ~ avg_pdsi, data = oak_pdsi_summary)
-plot(total_growth ~ avg_pdsi, data = oak_pdsi_summary)
+pdsi_growth_mod <- lm(total_growth ~ avg_gth_pdsi, data = oak_pdsi_summary)
+plot(total_growth ~ avg_inv_pdsi, data = oak_pdsi_summary)
 summary(pdsi_growth_mod)
-cor.test(oak_pdsi_summary$total_growth, oak_pdsi_summary$avg_pdsi)
+cor.test(oak_pdsi_summary$total_growth, oak_pdsi_summary$avg_gth_pdsi)
 
-pdsi_mortality_mod <- lm(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
-plot(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
+pdsi_mortality_mod <- lm(total_mortality ~ avg_mor_pdsi, data = oak_pdsi_summary)
+plot(total_mortality ~ avg_inv_pdsi, data = oak_pdsi_summary)
 summary(pdsi_mortality_mod)
-cor.test(oak_pdsi_summary$total_mortality, oak_pdsi_summary$avg_pdsi)
+cor.test(oak_pdsi_summary$total_mortality, oak_pdsi_summary$avg_mor_pdsi)
+
+#Change column names to match inventory columns
+colnames(pdsi_state_year) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "PDSI")
+
+inventory_pdsi <- merge(oak_state_year, pdsi_state_year, by = c("STATE_ABBR","EVAL_GRP_YEAR"))
+
+#Plot inventory and PDSI on a national level
+inventory_pdsi_national <- inventory_pdsi %>% 
+        mutate(wgt_pdsi_inv = PDSI * perc_inventory,
+               wgt_pdsi_gth = PDSI * perc_growth,
+               wgt_pdsi_mor = PDSI * perc_mortality,
+               wgt_pdsi_rem = PDSI * perc_removal) %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, 
+               national_inventory, national_growth, national_mortality, national_removal, 
+               wgt_pdsi_inv, wgt_pdsi_gth, wgt_pdsi_mor, wgt_pdsi_rem) %>% 
+        filter(EVAL_GRP_YEAR > 2005) %>% 
+        group_by(EVAL_GRP_YEAR) %>% 
+        summarise(yearly_pdsi_inv = sum(wgt_pdsi_inv),
+                  yearly_pdsi_gth = sum(wgt_pdsi_gth),
+                  yearly_pdsi_mor = sum(wgt_pdsi_mor),
+                  yearly_pdsi_rem = sum(wgt_pdsi_rem),
+                  total_inventory = mean(national_inventory)/10000000000,
+                  total_growth = mean(national_growth)/100000000,
+                  total_mortality = mean(national_mortality)/100000000,
+                  total_removal = mean(national_removal)/100000000)
+
+oak_pdsi_summary %>% 
+        mutate(total_inventory = total_inventory / 10000000000) %>% 
+        select(EVAL_GRP_YEAR, total_inventory, avg_inv_pdsi) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Inventory and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("PDSI", "Inventory (in 10 billion)"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+oak_pdsi_summary %>% 
+        mutate(total_growth = total_growth / 100000000) %>% 
+        select(EVAL_GRP_YEAR, avg_gth_pdsi, total_growth) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Growth and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("PDSI", "Growth (in 100 million)"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+oak_pdsi_summary %>% 
+        mutate(total_mortality = total_mortality / 100000000) %>% 
+        select(EVAL_GRP_YEAR, avg_mor_pdsi, total_mortality) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Mortality and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("PDSI", "Mortality (in 100 million)"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+oak_pdsi_summary %>% 
+        mutate(total_removal = total_removal / 100000000) %>% 
+        select(EVAL_GRP_YEAR, avg_rem_pdsi, total_removal) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Removal and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("PDSI", "Removal (in 100 million)"), values = c("darkblue", "red")) +
+                theme_minimal()
+```
+Given that change in collection methods in the 2000's, we should
+
+```{r}
+corrplot(cor(oak_pdsi_summary[2:9]), method = "square", type = "upper")
 ```
 
+While there is no correlation on a yearly basis, it would make sense that there would be some lag in the impact of a drought or flood on the oak population especially the growth and mortality.
+
+Checking for correlation of mortality with a 2 and 3 year lag results in: 
+```{r}
+#2 Year Lag
+cor.test(oak_pdsi_summary$total_mortality[3:12], oak_pdsi_summary$avg_mor_pdsi[1:10])
+
+#3 Year Lag
+cor.test(oak_pdsi_summary$total_mortality[4:12], oak_pdsi_summary$avg_mor_pdsi[1:9])
+```
+Checking for correlation of growth with a 2 and 3 year lag results in: 
+```{r}
+#2 Year Lag
+cor.test(oak_pdsi_summary$total_growth[3:12], oak_pdsi_summary$avg_gth_pdsi[1:10])
+
+#3 Year Lag
+cor.test(oak_pdsi_summary$total_growth[4:12], oak_pdsi_summary$avg_gth_pdsi[1:9])
+```
+
+Checking for correlation of inventory with a 2 and 3 year lag results in: 
+```{r}
+#2 Year Lag
+cor.test(oak_pdsi_summary$total_inventory[3:12], oak_pdsi_summary$avg_inv_pdsi[1:10])
+
+#3 Year Lag
+cor.test(oak_pdsi_summary$total_inventory[4:12], oak_pdsi_summary$avg_inv_pdsi[1:9])
+```
+
+As you can see, the Palmer Drought Severity Index starts to have more correlation with the oak inventoroy on a three year lag. This might provide a decent leading indicator of the growth and mortality of oaks.
 
 ### Building Permits
 
@@ -287,9 +433,7 @@ cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total
 cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
 cor.test(permits_inventory_summary$total_mortality, permits_inventory_summary$total_permits)
 cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$total_permits)
-
 ```
-
 We can see that White Oak removal, mortality, and inventory are all significantly correlated to the number of building permits. A significant, positive correlation does not necessarily make sense for total inventory, as we would expect that as removal increases with the construction of new buildings, the overall inventory would decrease. This is something that will require further research and analysis in order to determine the expected sign on this correlation.n
 
 ### Natural Disasters
@@ -473,6 +617,44 @@ There is significant correlation between the property damage caused by tornados 
 
 As an initial pass through the natural disaster data, it is clear that there are some events that have significant, positive correlation with the White Oak mortality. There are other events included in the dataset that might also be valuable to examine, such as excessive heat events (in place of climate data), or some of the aggressive storm types.
 
+### Government Spending - Per Capita
+#### Highway, Natural Resources, Fire Protection, Parks & Rec, Solid Waste
+Hypothesis #1 - Our hypothesis states as more government spending occurs for the state/local highway divisions, we would expect this to potentially reduce the White Oak population. The theory would be as government spending increases, existing highways could potentially see a "face-lift" or there could be expansions of the current interstate system into rural or untapped regions.
+
+```{r}
+gov_spending <- read_csv("GovtFinanceData/Govt_Finances_Cleaned.csv")
+
+gov_spending %>% 
+        group_by(Year) %>% 
+        summarise(Natural_Resources = as.numeric(sum(Natural_Resources_Exp)), Fire_Protection = sum(Fire_Protection_Exp), Parks_Rec = sum(Parks_Rec_Exp), 
+                  Highway = sum(Highway_Exp), Solid_Waste = sum(Solid_Waste_Exp)) %>% 
+        select(Year, Fire_Protection, Parks_Rec, Natural_Resources, 
+               Highway, Solid_Waste) %>%
+        gather("type",
+               "value", 
+               -Year) %>% 
+        ggplot(aes(x = Year, y = value, colour = type)) +
+        geom_line() +
+                ylim(0,60000) +
+        labs(title = "Government Spending - Per Capita",
+                y = "Dollars",
+                x = "Year") +
+  theme_minimal()
+
+colnames(gov_spending)[1] <- "EVAL_GRP_YEAR"
+
+gov_oak <- oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(as.numeric(total_removal), na.rm = TRUE),
+            total_growth = sum(as.numeric(total_growth), na.rm = TRUE),
+            total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
+            total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
+  merge(., gov_spending, by = "EVAL_GRP_YEAR")
+
+cor.test(gov_oak$Highway_Exp, gov_oak$total_removal)
+
+```
+
 # Models
 
 ### Hazard / Survival Model
@@ -481,12 +663,23 @@ The US Forest Service was able to provide additional detail on growth that came 
 
 ### Time Series Analysis
 
-
+Using various time series techniques, the goal would be to find which technique provides a valid and realistic forecast for the White Oak population. A major pitfall to this approach is that we are now limited to only 13-14 years of good data, which is not enough to project out very far. It may still be beneficial to use this as a way to further explore the data. 
 
 ### Cross-Sectional Analysis
+
+Create and test various hypotheses regarding how the outside factors introduced above interact with the White Oak population in order to understand what drives White Oak population growth/removal/decline.
+
+### Simulation
+
+Simulation of factors that can affect White Oak population over time. Use historic records to estimate characteristics of population drivers, use current inventory (2014) as starting point. A forest is a pretty deterministic system, it's going to grow at a certain rate. 
 
 # TO DO
 
 * Filter urbanization and drought land data to include only the Eastern states that are relevant to the White Oak analysis. This may or may not impact any correlation in trends that we see.
+*** Also need to continue searching for annual urbanization data and urbanization data by state.
 
 * When rolling to the national level, use weighted averages by % of White Oak population.
+*** Maybe instead of rolling to national, perform the analysis by state and then aggregate to the national level at the end
+
+* Deeper dive into exploration at the state level (we didn't want to include 36 maps for each outside factor in this file)
+*** Potentially exploration at a regional level?
