@@ -212,10 +212,10 @@ pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header =
 #                            stringsAsFactors = FALSE)
 
 #Read in divisional area in sq mi and percent
-division_area <- read_tsv("ClimateData/division_area.txt")
+division_area <- read_csv("ClimateData/division_area.csv")
 division_area[division_area == 0] <- NA
 division_area <- division_area[-nrow(division_area),]
-colnames(division_area) <- c("State_code","01","02","03","04","05","06","07","08","09","10","Total")
+colnames(division_area)[1:12] <- c("State_code","01","02","03","04","05","06","07","08","09","10","Total")
 division_area$State_code <- as.character(as.numeric(division_area$State_code))
 division_area_long <- division_area %>%
         gather(Division, 
@@ -255,7 +255,7 @@ pdsi_data_yearly <- merge(pdsi_data_yearly, division_area_long, by = c("State_co
 pdsi_state_year <- pdsi_data_yearly %>% 
         group_by(Abbreviation, Year) %>% 
         summarise(pdsi = sum(Yearly_Avg * percent_land))
-pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,1:12])
+pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,3:14])
 
 #Generate Index based on state abbreviation and year
 pdsi_data$state_yr <- paste0(pdsi_data$Abbreviation, pdsi_data$Year)
@@ -267,11 +267,11 @@ pdsi_data$state_yr <- paste0(pdsi_data$Abbreviation, pdsi_data$Year)
 
 #inventory_pdsi <- merge(inventory_yr_state, pdsi_data[,17:18])
 
-colnames(pdsi_data)[14] <- "EVAL_GRP_YEAR"  
-colnames(pdsi_data)[16] <- "STATE_ABBR"
+colnames(pdsi_data)[17] <- "EVAL_GRP_YEAR"  
+colnames(pdsi_data)[19] <- "STATE_ABBR"
         
 oak_total <- merge(oak_total, pdsi_data, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
-oak_total <- oak_total[,c(1:7, 22)]
+oak_total <- oak_total[,c(1:7, 25)]
 colnames(oak_total)[8] <- "yearly_avg_pdsi"
 
 #Average annual level by state
@@ -391,15 +391,15 @@ inventory_pdsi_national %>%
         scale_colour_manual(labels = c("Removal (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
                 theme_minimal()
 #No lag
-cor(inventory_pdsi_national[,2:9]))
+cor(inventory_pdsi_national[,2:9])
 
 #2 Year Lag
-cor(inventory_pdsi_national$total_inventory[3:12], inventory_pdsi_national$yearly_pdsi[1:10])
+cor(inventory_pdsi_national$total_inventory[3:12], inventory_pdsi_national$yearly_pdsi_mor[1:10])
 
 #3 Year Lag
-cor(inventory_pdsi_national$total_inventory[4:12], inventory_pdsi_national$yearly_pdsi[1:9])
+cor(inventory_pdsi_national$total_inventory[4:12], inventory_pdsi_national$yearly_pdsi_mor[1:9])
 ```
-While there is no correlation on a yearly basis, it would make sense that there would be some lag in the impact of a drought or flood. Looking at a 2 year lag we see a -0.335 correlation coefficient and moving to a 3 year lag gives a -0.374 correlation coefficient. The negative coefficent is concerning because it would 
+While there is no correlation on a yearly basis, it would make sense that there would be some lag in the impact of a drought or flood. Looking at a 2 year lag we see a -0.335 correlation coefficient and moving to a 3 year lag gives a -0.374 correlation coefficient. The negative coefficent is concerning because it would imply that as drought increases, mortality decreases, which is the opposite of what we would expect. this will require more research to understand what is happenning within the data.
 
 ### Building Permits
 
