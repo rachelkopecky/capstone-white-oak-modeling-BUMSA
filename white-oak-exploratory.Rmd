@@ -432,6 +432,44 @@ cor.test(tornado_oak$total_damage, tornado_oak$total_mortality)
 
 ```
 
+#### Government Spending - Per Capita
+Hypothesis #1 - Our hypothesis states as more government spending occurs for the state/local highway divisions, we would expect this to potentially reduce the White Oak population. The theory would be as government spending increases, existing highways could potentially see a "face-lift" or there could be expansions of the current interstate system into rural or untapped regions.
+
+```{r}
+gov_spending <- read_csv("GovtFinanceData/Govt_Finances_Cleaned.csv")
+
+gov_spending %>% 
+        group_by(Year) %>% 
+        summarise(Natural_Resources = as.numeric(sum(Natural_Resources_Exp)), Fire_Protection = sum(Fire_Protection_Exp), Parks_Rec = sum(Parks_Rec_Exp), 
+                  Highway = sum(Highway_Exp), Solid_Waste = sum(Solid_Waste_Exp)) %>% 
+        select(Year, Fire_Protection, Parks_Rec, Natural_Resources, 
+               Highway, Solid_Waste) %>%
+        gather("type",
+               "value", 
+               -Year) %>% 
+        ggplot(aes(x = Year, y = value, colour = type)) +
+        geom_line() +
+                ylim(0,60000) +
+        labs(title = "Government Spending - Per Capita",
+                y = "Dollars",
+                x = "Year") +
+  theme_minimal()
+
+colnames(gov_spending)[1] <- "EVAL_GRP_YEAR"
+
+gov_oak <- oak_total %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(as.numeric(total_removal), na.rm = TRUE),
+            total_growth = sum(as.numeric(total_growth), na.rm = TRUE),
+            total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
+            total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
+  merge(., gov_spending, by = "EVAL_GRP_YEAR")
+
+cor.test(gov_oak$Highway_Exp, gov_oak$total_removal)
+
+```
+
+
 There is significant correlation between the property damage caused by tornados and White Oak mortality.
 
 As an initial pass through the natural disaster data, it is clear that there are some events that have significant, positive correlation with the White Oak mortality. There are other events included in the dataset that might also be valuable to examine, such as excessive heat events (in place of climate data), or some of the aggressive storm types.
