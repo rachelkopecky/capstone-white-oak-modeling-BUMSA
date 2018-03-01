@@ -436,7 +436,7 @@ There is significant correlation between the property damage caused by tornados 
 
 As an initial pass through the natural disaster data, it is clear that there are some events that have significant, positive correlation with the White Oak mortality. There are other events included in the dataset that might also be valuable to examine, such as excessive heat events (in place of climate data), or some of the aggressive storm types.
 
-#### Government Spending - Per Capita
+### Government Spending - Per Capita
 Hypothesis #1 - Our hypothesis states as more government spending occurs for the state/local highway divisions, we would expect this to potentially reduce the White Oak population. The theory would be as government spending increases, existing highways could potentially see a "face-lift" or there could be expansions of the current interstate system into rural or untapped regions.
 
 ```{r}
