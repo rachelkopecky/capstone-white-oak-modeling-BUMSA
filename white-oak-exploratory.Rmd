@@ -2,14 +2,17 @@
 title: "White Oak Exploration"
 author: "Paul Forst, Tammy Hang, Rachel Kopecky, Jack Letcher, Ian O'Connor"
 output:
-  html_document:
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  html_notebook:
+    fig_caption: yes
+    highlight: textmate
     theme: sandstone
     toc: yes
     toc_depth: 4
     toc_float: yes
-  html_notebook:
-    fig_caption: yes
-    highlight: textmate
+  html_document:
     theme: sandstone
     toc: yes
     toc_depth: 4
@@ -297,6 +300,19 @@ The US Forest Service was able to provide additional detail on growth that came 
 
 ### Cross-Sectional Analysis
 
+
+
+### Simulation
+
+Simulation of factors that can affect White Oak population over time. Use historic records to estimate characteristics of population drivers, use current inventory (2014) as starting point. A forest is a pretty deterministic system, it's going to grow at a certain rate. 
+
+
+
+Analysis by state and then aggregate to national at the end
+
 # TO DO
 
-* Filter urbanization and drought land data to include only the Eastern states that are relevant to the White Oak analysis. This may or may not impact any correlation in trends that we see.
+* Filter urbanization data to include only the Eastern states that are relevant to the White Oak analysis. This may or may not impact any correlation in trends that we see.
+
+* Loop through states to analyze correlations/effects at the state level.
+
