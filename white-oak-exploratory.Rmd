@@ -26,6 +26,7 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 library(tibbletime)
+library(corrplot)
 ```
 
 # Data
@@ -166,7 +167,6 @@ oak_state_year <- oak_total %>%
                perc_growth = state_growth / national_growth,
                perc_mortality = state_mortality / national_mortality,
                perc_removal = state_removal / national_removal)
-
 ```
 
 
@@ -251,11 +251,6 @@ pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header =
 #climate_div_cty <- read.csv("ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/cd_county_join.txt", 
 #                            header = FALSE,
 #                            stringsAsFactors = FALSE)
-#climate_div_cty <- separate(climate_div_cty, 
-#         col = 'V1',
-#         into = c("State_Div", "County"),
-#         remove = TRUE,
-#         fill = 'right')
 
 #Read in divisional area in sq mi and percent
 division_area <- read_tsv("ClimateData/division_area.txt")
@@ -303,47 +298,103 @@ pdsi_state_year <- pdsi_data_yearly %>%
         summarise(pdsi = sum(Yearly_Avg * percent_land))
 
 #Generate Index based on state abbreviation and year
-pdsi_state_year$state_yr <- paste0(pdsi_state_year$Abbreviation, pdsi_state_year$Year)
+#pdsi_state_year$state_yr <- paste0(pdsi_state_year$Abbreviation, pdsi_state_year$Year)
 
-inventory_yr_state <- oak_total %>% 
-        mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
-        group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
-        summarise(total_growth = sum(total_growth),
-                  total_removal = sum(total_removal),
-                  total_mortality = sum(total_mortality),
-                  total_inventory = sum(total_inventory))
+#Change column names to match inventory columns
+colnames(pdsi_state_year) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "PDSI")
 
-inventory_pdsi <- merge(inventory_yr_state, pdsi_state_year, by = "state_yr")
+#inventory_yr_state <- oak_total %>% 
+#        mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
+#        group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
+#        summarise(total_growth = sum(total_growth),
+#                  total_removal = sum(total_removal),
+#                  total_mortality = sum(total_mortality),
+#                  total_inventory = sum(total_inventory))
 
-inventory_pdsi %>% 
-        mutate(mortality_div = total_mortality/1000000) %>% 
-        select(Abbreviation, Year, mortality_div, pdsi) %>% 
-        filter(Year >= 2005)%>%
+inventory_pdsi <- merge(oak_state_year, pdsi_state_year, by = c("STATE_ABBR","EVAL_GRP_YEAR"))
+
+#Plot inventory and PDSI on a national level
+inventory_pdsi_national <- inventory_pdsi %>% 
+        mutate(wgt_pdsi_inv = PDSI * perc_inventory,
+               wgt_pdsi_gth = PDSI * perc_growth,
+               wgt_pdsi_mor = PDSI * perc_mortality,
+               wgt_pdsi_rem = PDSI * perc_removal) %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, 
+               national_inventory, national_growth, national_mortality, national_removal, 
+               wgt_pdsi_inv, wgt_pdsi_gth, wgt_pdsi_mor, wgt_pdsi_rem) %>% 
+        filter(EVAL_GRP_YEAR > 2005) %>% 
+        group_by(EVAL_GRP_YEAR) %>% 
+        summarise(yearly_pdsi_inv = sum(wgt_pdsi_inv),
+                  yearly_pdsi_gth = sum(wgt_pdsi_gth),
+                  yearly_pdsi_mor = sum(wgt_pdsi_mor),
+                  yearly_pdsi_rem = sum(wgt_pdsi_rem),
+                  total_inventory = mean(national_inventory)/10000000000,
+                  total_growth = mean(national_growth)/100000000,
+                  total_mortality = mean(national_mortality)/100000000,
+                  total_removal = mean(national_removal)/100000000)
+
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_inv, total_inventory) %>% 
         gather("Measure",
                "Value",
-               -Abbreviation, 
-               -Year) %>% 
-        filter(Abbreviation == 'AL') %>% 
-        ggplot(aes(x = Year, y = Value, colour = Measure, group = Measure)) +
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
                 geom_line() +
-                labs(title = "Yearly Mortality and PDSI for Alabama",
+                labs(title = "National Inventory and Weighted PDSI",
                      y = "Measure",
                      x = "Year") +
-        scale_colour_manual(labels = c("Mortality (in millions)", "PDSI"), values = c("darkblue", "red")) +
+        scale_colour_manual(labels = c("Inventory (in 10 billion)", "PDSI"), values = c("darkblue", "red")) +
                 theme_minimal()
 
-#Average annual level by state
-#pdsi_data %>% 
-#        filter(Abbreviation %in% eastern_states) %>% 
-#        filter(Year > 1968) %>% 
-#        ggplot(aes(x = Year, y = Yearly_Avg, colour = Abbreviation)) +
-#        geom_line() +
-#        labs(title = "Annual Palmer Drought Serverity Index",
-#             y = "Index",
-#             x = "Year") +
-#        theme_minimal()
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_gth, total_growth) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Growth and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Growth (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
 
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_mor, total_mortality) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Mortality and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Mortality (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_rem, total_removal) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Removal and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Removal (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
+#No lag
+cor(inventory_pdsi_national[,2:9]))
+
+#2 Year Lag
+cor(inventory_pdsi_national$total_inventory[3:12], inventory_pdsi_national$yearly_pdsi[1:10])
+
+#3 Year Lag
+cor(inventory_pdsi_national$total_inventory[4:12], inventory_pdsi_national$yearly_pdsi[1:9])
 ```
+
+While there is no correlation on a yearly basis, it would make sense that there would be some lag in the impact of a drought or flood. Looking at a 2 year lag we see a -0.335 correlation coefficient and moving to a 3 year lag gives a -0.374 correlation coefficient. The negative coefficent is concerning because it would 
 
 # TO DO
 
