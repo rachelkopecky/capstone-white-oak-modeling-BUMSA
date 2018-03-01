@@ -23,6 +23,7 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 library(tibbletime)
+library(corrplot)
 library(utf8)
 library(stringr)
 ```
@@ -139,6 +140,31 @@ eastern_states <- unique(oak$STATE_ABBR)
 
 We see a lot of variation in the growth and removal data during the time of the periodic collection method, and we see a lot of the trend smooth out in the early 2000s. From the plot above, we notice a downward trend in both growth and removal, while we see an upward trend in mortality. 
 
+To properly weight our other potential factors on a national level, we need to know the percentage of oak inventory in each state. 
+
+```{r}
+#Generate percent of total population by state
+oak_yearly <- oak_total %>% 
+        group_by(EVAL_GRP_YEAR) %>% 
+        summarise(national_inventory = sum(total_inventory),
+                  national_growth = sum(total_growth),
+                  national_mortality = sum(total_mortality),
+                  national_removal = sum(total_removal))
+
+oak_state_year <- oak_total %>% 
+        group_by(STATE_ABBR, EVAL_GRP_YEAR) %>% 
+        summarise(state_inventory = sum(total_inventory),
+                  state_growth = sum(total_growth),
+                  state_mortality = sum(total_mortality),
+                  state_removal = sum(total_removal)) %>% 
+        merge(oak_yearly, by = "EVAL_GRP_YEAR") %>% 
+        mutate(perc_inventory = state_inventory / national_inventory,
+               perc_growth = state_growth / national_growth,
+               perc_mortality = state_mortality / national_mortality,
+               perc_removal = state_removal / national_removal)
+```
+
+
 ### Urbanization
 
 #### Urban Land Area
@@ -167,14 +193,38 @@ urban_area %>%
 
 Although we do not have annual values, there is a clear upward trend in the urban land area. Hopefully we will be able to find additional data and/or a valid method for interpolating these values.
 
-### Palmer Drought Severity Index
+### Drought
 
-The Palmer Drought Severity Index is a measure the dryness of a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points.
+#### Palmer Drought Severity Index (PDSI)
+The Palmer Drought Severity Index is a measure of dryness in a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points up to +/- 7.
 
 Data: https://www.ncdc.noaa.gov/temp-and-precip/drought/historical-palmers/
 
 ```{r}
 pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
+#Explore a link to the data files online to allow update numbers as necessary
+#Need to read 'procdate.txt' to get date then append it to the necessary file
+#ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/
+
+#Read in file of county FIPS codes to state_division code
+#climate_div_cty <- read.csv("ftp://ftp.ncdc.noaa.gov/pub/data/cirs/climdiv/cd_county_join.txt", 
+#                            header = FALSE,
+#                            stringsAsFactors = FALSE)
+
+#Read in divisional area in sq mi and percent
+division_area <- read_tsv("ClimateData/division_area.txt")
+division_area[division_area == 0] <- NA
+division_area <- division_area[-nrow(division_area),]
+colnames(division_area) <- c("State_code","01","02","03","04","05","06","07","08","09","10","Total")
+division_area$State_code <- as.character(as.numeric(division_area$State_code))
+division_area_long <- division_area %>%
+        gather(Division, 
+               "LandArea",
+               -c(State_code, Total),
+               na.rm = TRUE) %>% 
+        group_by(State_code, Division) %>% 
+        summarise(percent_land = LandArea / Total)
+
 pdsi_states <- read.csv("ClimateData/state_codes.csv")
 
 colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
@@ -182,19 +232,29 @@ colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Ju
 #Parse our the state, division and year from code
 pdsi_data$State_code <- substr(pdsi_data$Division_Year, 1, nchar(pdsi_data$Division_Year)-8)
 pdsi_data$Division <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-7, nchar(pdsi_data$Division_Year)-6)
-#pdsi_data$Unknown <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
+pdsi_data$Element_Code <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-5, nchar(pdsi_data$Division_Year)-4)
 pdsi_data$Year <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-3, nchar(pdsi_data$Division_Year))
 
 #Convert state code to name
 pdsi_data <- merge(pdsi_data, pdsi_states)
-
-#Remove unnecessary columns
-pdsi_data <- pdsi_data[,-c(1:2)]
+#division_area_long <- merge(division_area_long, pdsi_states, by = "State_code")
 
 #Replace missing values (-99.99) with NA
 pdsi_data[pdsi_data == '-99.99'] <- NA
 
 #Generate yearly average
+pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,3:14])
+
+#Remove unnecessary columns
+pdsi_data_yearly <- pdsi_data[,-c(2:14)]
+
+#Merge land percentages with PDSI
+pdsi_data_yearly <- merge(pdsi_data_yearly, division_area_long, by = c("State_code", "Division"))
+
+#Create Yearly State Total PDSI based on weighted divisions
+pdsi_state_year <- pdsi_data_yearly %>% 
+        group_by(Abbreviation, Year) %>% 
+        summarise(pdsi = sum(Yearly_Avg * percent_land))
 pdsi_data$Yearly_Avg <- rowMeans(pdsi_data[,1:12])
 
 #Generate Index based on state abbreviation and year
@@ -242,8 +302,104 @@ pdsi_mortality_mod <- lm(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
 plot(total_mortality ~ avg_pdsi, data = oak_pdsi_summary)
 summary(pdsi_mortality_mod)
 cor.test(oak_pdsi_summary$total_mortality, oak_pdsi_summary$avg_pdsi)
-```
 
+#Generate Index based on state abbreviation and year
+#pdsi_state_year$state_yr <- paste0(pdsi_state_year$Abbreviation, pdsi_state_year$Year)
+
+#Change column names to match inventory columns
+colnames(pdsi_state_year) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "PDSI")
+
+#inventory_yr_state <- oak_total %>% 
+#        mutate(state_yr = paste0(STATE_ABBR,EVAL_GRP_YEAR)) %>% 
+#        group_by(state_yr, STATE_ABBR, EVAL_GRP_YEAR) %>% 
+#        summarise(total_growth = sum(total_growth),
+#                  total_removal = sum(total_removal),
+#                  total_mortality = sum(total_mortality),
+#                  total_inventory = sum(total_inventory))
+
+inventory_pdsi <- merge(oak_state_year, pdsi_state_year, by = c("STATE_ABBR","EVAL_GRP_YEAR"))
+
+#Plot inventory and PDSI on a national level
+inventory_pdsi_national <- inventory_pdsi %>% 
+        mutate(wgt_pdsi_inv = PDSI * perc_inventory,
+               wgt_pdsi_gth = PDSI * perc_growth,
+               wgt_pdsi_mor = PDSI * perc_mortality,
+               wgt_pdsi_rem = PDSI * perc_removal) %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, 
+               national_inventory, national_growth, national_mortality, national_removal, 
+               wgt_pdsi_inv, wgt_pdsi_gth, wgt_pdsi_mor, wgt_pdsi_rem) %>% 
+        filter(EVAL_GRP_YEAR > 2005) %>% 
+        group_by(EVAL_GRP_YEAR) %>% 
+        summarise(yearly_pdsi_inv = sum(wgt_pdsi_inv),
+                  yearly_pdsi_gth = sum(wgt_pdsi_gth),
+                  yearly_pdsi_mor = sum(wgt_pdsi_mor),
+                  yearly_pdsi_rem = sum(wgt_pdsi_rem),
+                  total_inventory = mean(national_inventory)/10000000000,
+                  total_growth = mean(national_growth)/100000000,
+                  total_mortality = mean(national_mortality)/100000000,
+                  total_removal = mean(national_removal)/100000000)
+
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_inv, total_inventory) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Inventory and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Inventory (in 10 billion)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_gth, total_growth) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Growth and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Growth (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_mor, total_mortality) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Mortality and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Mortality (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
+
+inventory_pdsi_national %>% 
+        select(EVAL_GRP_YEAR, yearly_pdsi_rem, total_removal) %>% 
+        gather("Measure",
+               "Value",
+               -EVAL_GRP_YEAR) %>% 
+        ggplot(aes(x = EVAL_GRP_YEAR, y = Value, colour = Measure, group = Measure)) +
+                geom_line() +
+                labs(title = "National Removal and Weighted PDSI",
+                     y = "Measure",
+                     x = "Year") +
+        scale_colour_manual(labels = c("Removal (in 100 million)", "PDSI"), values = c("darkblue", "red")) +
+                theme_minimal()
+#No lag
+cor(inventory_pdsi_national[,2:9]))
+
+#2 Year Lag
+cor(inventory_pdsi_national$total_inventory[3:12], inventory_pdsi_national$yearly_pdsi[1:10])
+
+#3 Year Lag
+cor(inventory_pdsi_national$total_inventory[4:12], inventory_pdsi_national$yearly_pdsi[1:9])
+```
+While there is no correlation on a yearly basis, it would make sense that there would be some lag in the impact of a drought or flood. Looking at a 2 year lag we see a -0.335 correlation coefficient and moving to a 3 year lag gives a -0.374 correlation coefficient. The negative coefficent is concerning because it would 
 
 ### Building Permits
 
@@ -279,9 +435,7 @@ cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total
 cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
 cor.test(permits_inventory_summary$total_mortality, permits_inventory_summary$total_permits)
 cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$total_permits)
-
 ```
-
 We can see that White Oak removal, mortality, and inventory are all significantly correlated to the number of building permits. A significant, positive correlation does not necessarily make sense for total inventory, as we would expect that as removal increases with the construction of new buildings, the overall inventory would decrease. This is something that will require further research and analysis in order to determine the expected sign on this correlation.n
 
 ### Natural Disasters
