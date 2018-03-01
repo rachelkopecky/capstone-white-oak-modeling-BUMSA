@@ -452,22 +452,23 @@ The US Forest Service was able to provide additional detail on growth that came 
 
 ### Time Series Analysis
 
-
+Using various time series techniques, the goal would be to find which technique provides a valid and realistic forecast for the White Oak population. A major pitfall to this approach is that we are now limited to only 13-14 years of good data, which is not enough to project out very far. It may still be beneficial to use this as a way to further explore the data. 
 
 ### Cross-Sectional Analysis
 
-
+Create and test various hypotheses regarding how the outside factors introduced above interact with the White Oak population in order to understand what drives White Oak population growth/removal/decline.
 
 ### Simulation
 
 Simulation of factors that can affect White Oak population over time. Use historic records to estimate characteristics of population drivers, use current inventory (2014) as starting point. A forest is a pretty deterministic system, it's going to grow at a certain rate. 
 
-
-
-Analysis by state and then aggregate to national at the end
-
 # TO DO
 
 * Filter urbanization and drought land data to include only the Eastern states that are relevant to the White Oak analysis. This may or may not impact any correlation in trends that we see.
+*** Also need to continue searching for annual urbanization data and urbanization data by state.
 
 * When rolling to the national level, use weighted averages by % of White Oak population.
+*** Maybe instead of rolling to national, perform the analysis by state and then aggregate to the national level at the end
+
+* Deeper dive into exploration at the state level (we didn't want to include 36 maps for each outside factor in this file)
+*** Potentially exploration at a regional level?
