@@ -2,17 +2,14 @@
 title: "White Oak Exploration"
 author: "Paul Forst, Tammy Hang, Rachel Kopecky, Jack Letcher, Ian O'Connor"
 output:
-  pdf_document:
-    toc: yes
-    toc_depth: '4'
-  html_notebook:
-    fig_caption: yes
-    highlight: textmate
+  html_document:
     theme: sandstone
     toc: yes
     toc_depth: 4
     toc_float: yes
-  html_document:
+  html_notebook:
+    fig_caption: yes
+    highlight: textmate
     theme: sandstone
     toc: yes
     toc_depth: 4
