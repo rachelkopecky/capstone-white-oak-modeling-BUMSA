@@ -587,10 +587,10 @@ tornado_oak <- oak_total %>%
 cor.test(tornado_oak$total_damage, tornado_oak$total_mortality)
 
 ```
-# Invasive Species/Pest
+### Invasive Species/Pest
 ```{r}
 #Read in and manipulate pest data.  This data is from the USDA Forest Service.  Data shows mortality acres for all pests by state.  (Data gathered did not allow multiple selections of specfic pests.)  **If needed, we can specify particular pests. 
-pest <- read_csv("Pest_By_Region.csv")
+pest <- read_csv("Pest/Pest_By_Region.csv")
 spec(pest)
 pest_output <- as.data.frame(pest) %>%
               tidyr::gather(key = Year, Value = c(3:22), Acres, -State)
@@ -613,8 +613,6 @@ pest_output %>%
        x = "Year") +
   theme_minimal()
 ```
-
-
 
 
 There is significant correlation between the property damage caused by tornados and White Oak mortality.
