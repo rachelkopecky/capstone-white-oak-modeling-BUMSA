@@ -2,14 +2,17 @@
 title: "White Oak Exploration"
 author: "Paul Forst, Tammy Hang, Rachel Kopecky, Jack Letcher, Ian O'Connor"
 output:
-  html_document:
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  html_notebook:
+    fig_caption: yes
+    highlight: textmate
     theme: sandstone
     toc: yes
     toc_depth: 4
     toc_float: yes
-  html_notebook:
-    fig_caption: yes
-    highlight: textmate
+  html_document:
     theme: sandstone
     toc: yes
     toc_depth: 4
@@ -136,6 +139,9 @@ oak_total %>%
 
 #Grab list of eastern states included in Oak data for use in other data sets
 eastern_states <- unique(oak$STATE_ABBR)
+
+#Grab list of state codes to names for future use
+state_codes <- read.csv("ClimateData/state_codes.csv")
 ```
 
 We see a lot of variation in the growth and removal data during the time of the periodic collection method, and we see a lot of the trend smooth out in the early 2000s. From the plot above, we notice a downward trend in both growth and removal, while we see an upward trend in mortality. 
@@ -193,6 +199,43 @@ urban_area %>%
 
 Although we do not have annual values, there is a clear upward trend in the urban land area. Hopefully we will be able to find additional data and/or a valid method for interpolating these values.
 
+#### Building Permits
+
+As the number of building permits increases, we would expect this to potentially reduce the White Oak population, both for urbanization reasons and for the demand of White Oak within the construction and housing professions. 
+
+```{r}
+permits <- read_csv("UrbanizationData/BuildingPermits.csv")
+
+colnames(permits)[1] <- "State"
+
+permits <- merge(permits, state_codes, by = "State")
+
+permits <- select(permits, Abbreviation, Year, Permits)
+
+colnames(permits) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "total_permits")
+
+permits_inventory <- merge(oak_total, permits, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
+
+permits_inventory_summary <- permits_inventory %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_growth = sum(total_growth, na.rm = TRUE),
+            total_removal = sum(total_removal, na.rm = TRUE),
+            total_mortality = sum(total_mortality, na.rm = TRUE),
+            total_inventory = sum(total_inventory, na.rm = TRUE),
+            total_permits = sum(total_permits, na.rm = TRUE))
+
+permits_inventory_summary %>% 
+  ggplot(aes(x = EVAL_GRP_YEAR, y = total_permits)) +
+  geom_line()
+
+cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total_permits)
+# Removal and permits are SIGNIFICANTLY correlated
+cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
+cor.test(permits_inventory_summary$total_mortality, permits_inventory_summary$total_permits)
+cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$total_permits)
+```
+We can see that White Oak removal, mortality, and inventory are all significantly correlated to the number of building permits. A significant, positive correlation does not necessarily make sense for total inventory, as we would expect that as removal increases with the construction of new buildings, the overall inventory would decrease. This is something that will require further research and analysis in order to determine the expected sign on this correlation.
+
 ### Drought
 
 #### Palmer Drought Severity Index (PDSI)
@@ -225,8 +268,6 @@ division_area_long <- division_area %>%
         group_by(State_code, Division) %>% 
         summarise(percent_land = LandArea / Total)
 
-pdsi_states <- read.csv("ClimateData/state_codes.csv")
-
 colnames(pdsi_data) <- c("Division_Year","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
 
 #Parse our the state, division and year from code
@@ -236,8 +277,8 @@ pdsi_data$Element_Code <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Divisi
 pdsi_data$Year <- substr(pdsi_data$Division_Year, nchar(pdsi_data$Division_Year)-3, nchar(pdsi_data$Division_Year))
 
 #Convert state code to name
-pdsi_data <- merge(pdsi_data, pdsi_states)
-#division_area_long <- merge(division_area_long, pdsi_states, by = "State_code")
+pdsi_data <- merge(pdsi_data, state_codes)
+#division_area_long <- merge(division_area_long, state_codes, by = "State_code")
 
 #Replace missing values (-99.99) with NA
 pdsi_data[pdsi_data == '-99.99'] <- NA
@@ -398,43 +439,6 @@ cor.test(oak_pdsi_summary$total_inventory[4:12], oak_pdsi_summary$avg_inv_pdsi[1
 ```
 
 As you can see, the Palmer Drought Severity Index starts to have more correlation with the oak inventoroy on a three year lag. This might provide a decent leading indicator of the growth and mortality of oaks.
-
-### Building Permits
-
-As the number of building permits increases, we would expect this to potentially reduce the White Oak population, both for urbanization reasons and for the demand of White Oak within the construction and housing professions. 
-
-```{r}
-permits <- read_csv("UrbanizationData/BuildingPermits.csv")
-
-colnames(permits)[1] <- "State"
-
-permits <- merge(permits, pdsi_states, by = "State")
-
-permits <- select(permits, Abbreviation, Year, Permits)
-
-colnames(permits) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "total_permits")
-
-permits_inventory <- merge(oak_total, permits, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
-
-permits_inventory_summary <- permits_inventory %>% 
-  group_by(EVAL_GRP_YEAR) %>% 
-  summarise(total_growth = sum(total_growth, na.rm = TRUE),
-            total_removal = sum(total_removal, na.rm = TRUE),
-            total_mortality = sum(total_mortality, na.rm = TRUE),
-            total_inventory = sum(total_inventory, na.rm = TRUE),
-            total_permits = sum(total_permits, na.rm = TRUE))
-
-permits_inventory_summary %>% 
-  ggplot(aes(x = EVAL_GRP_YEAR, y = total_permits)) +
-  geom_line()
-
-cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total_permits)
-# Removal and permits are SIGNIFICANTLY correlated
-cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
-cor.test(permits_inventory_summary$total_mortality, permits_inventory_summary$total_permits)
-cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$total_permits)
-```
-We can see that White Oak removal, mortality, and inventory are all significantly correlated to the number of building permits. A significant, positive correlation does not necessarily make sense for total inventory, as we would expect that as removal increases with the construction of new buildings, the overall inventory would decrease. This is something that will require further research and analysis in order to determine the expected sign on this correlation.n
 
 ### Natural Disasters
 
@@ -628,19 +632,19 @@ cor.test(gov_oak$Highway_Exp, gov_oak$total_removal)
 
 # Models
 
-### Hazard / Survival Model
+## Hazard / Survival Model
 
 The US Forest Service was able to provide additional detail on growth that came from new plants for the annual data (years 2001 through 2017). Although we now have this distinction, this time period may not be long enough for us to adequately produce a hazard function considering the lifespan of a White Oak tree is longer than 13 years. We also do not have the detail on when a specific tree that was new in 2001 died (either from mortality or removal). We will need to do more research and have further discussion on whether this is even a viable method to consider. 
 
-### Time Series Analysis
+## Time Series Analysis
 
 Using various time series techniques, the goal would be to find which technique provides a valid and realistic forecast for the White Oak population. A major pitfall to this approach is that we are now limited to only 13-14 years of good data, which is not enough to project out very far. It may still be beneficial to use this as a way to further explore the data. 
 
-### Cross-Sectional Analysis
+## Cross-Sectional Analysis
 
 Create and test various hypotheses regarding how the outside factors introduced above interact with the White Oak population in order to understand what drives White Oak population growth/removal/decline.
 
-### Simulation
+## Simulation
 
 Simulation of factors that can affect White Oak population over time. Use historic records to estimate characteristics of population drivers, use current inventory (2014) as starting point. A forest is a pretty deterministic system, it's going to grow at a certain rate. 
 
