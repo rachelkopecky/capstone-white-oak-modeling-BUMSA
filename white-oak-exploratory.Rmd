@@ -656,3 +656,108 @@ Simulation of factors that can affect White Oak population over time. Use histor
 
 * Deeper dive into exploration at the state level (we didn't want to include 36 maps for each outside factor in this file)
 *** Potentially exploration at a regional level?
+
+
+### Simulation Concept
+
+The idea behind the simulation, is that we utilize multiple regression to quantify the "effect size" of our outside predictors on the growth/removal/mortality of the WO population.
+
+```{r}
+
+fire <- read_csv("fire_data.csv")
+colnames(fire) <- c("STATE_ABBR", "num_fires", "acres_burned", "EVAL_GRP_YEAR")
+
+mod.dat <- permits_inventory %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(total_removal),
+            total_growth = sum(total_growth),
+            total_mortality = sum(total_mortality),
+            total_inventory = sum(total_inventory),
+            total_permits = sum(total_permits),
+            yearly_avg_pdsi = mean(yearly_avg_pdsi)) %>% 
+  merge(., fire, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
+
+
+
+mod.dat.test <- mod.dat %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(total_inventory),
+            total_mortality = sum(total_mortality),
+            total_removal = sum(as.numeric(total_removal)),
+            total_acres = sum(acres_burned),
+            total_permits = sum(total_permits))
+
+test.mod <- lm(total_removal ~ total_acres + total_permits, data = mod.dat.test)
+summary(test.mod)
+
+r9 <- c("MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH", "WV", "PA", "NJ", "DE", "MD", "NY", "CT", "RI", "MA", "VT", "NH", "ME")
+
+r2 <- c("ND", "SD", "NE", "KS")
+
+r8 <- c("TX", "OK", "LA", "AR", "MS", "AL", "GA", "FL", "TN", "KY", "VA", "NC", "SC")
+
+mod.dat$region <- ifelse(mod.dat$STATE_ABBR %in% r9, "R9", 
+                         ifelse(mod.dat$STATE_ABBR %in% r8, "R8",
+                                ifelse(mod.dat$STATE_ABBR %in% r2, "R2", "NA")))
+
+mod.dat.r9 <- mod.dat %>% 
+  filter(region == "R9") %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(total_inventory),
+            total_mortality = sum(total_mortality),
+            total_removal = sum(as.numeric(total_removal)),
+            total_acres = sum(acres_burned),
+            total_permits = sum(total_permits))
+
+cor.test(mod.dat.r9$total_inventory, mod.dat.r9$total_acres)
+
+test.mod <- lm(total_inventory ~ total_acres + total_permits, data = mod.dat.r9)
+summary(test.mod)
+
+
+r9_inv_14 <- mod.dat.r9 %>% 
+  filter(EVAL_GRP_YEAR == "2014") %>% 
+  select(total_inventory)
+
+r9_inv <- r9_inv_14$total_inventory[1]
+
+preds <- NULL
+
+for (j in 1:100) {
+
+  r9_inv <- r9_inv_14$total_inventory[1]
+    
+  for (i in 2:50) {
+    
+    total_acres <- sample(density(mod.dat.r9$total_acres)$x, 1, prob = density(mod.dat.r9$total_acres)$y)
+    total_permits <- sample(density(mod.dat.r9$total_permits)$x, 1, prob = density(mod.dat.r9$total_permits)$y)
+    
+    df <- data.frame(total_acres, total_permits)
+    df$total_inventory <- predict(test.mod, df)
+    
+    r9_inv[i] <- df$total_inventory[1]
+    
+  }
+  
+  preds[[j]] <- r9_inv  
+  
+}
+
+plott <- data.frame(preds)
+plott$year <- 2014:2063
+
+plott <- gather(plott, "key", "value", - year)
+
+ggplot(plott, aes(x = year, y = value, colour = key)) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, 100000000000)) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  stat_summary(fun.y=mean, geom="line", colour="black", size = 3)
+
+ggplot(mod.dat.r9, aes(x = EVAL_GRP_YEAR, y = total_acres)) +
+  geom_line()
+
+plot(density(mod.dat.r9$total_acres))
+
+```
