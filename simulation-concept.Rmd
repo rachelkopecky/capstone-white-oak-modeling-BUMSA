@@ -1,0 +1,176 @@
+---
+title: "Simulation Concept"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 9)
+
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(tibbletime)
+library(corrplot)
+library(utf8)
+library(stringr)
+```
+
+
+```{r echo = FALSE}
+inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
+inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
+inv33 <- read_csv("WhiteOakData/white_oak_inv_33.csv")
+
+inventory <- rbind(inv23, inv24, inv33)
+
+inventory[is.na(inventory)] <- 0
+
+inventory$UNIT <- paste0(inventory$STATECD, "0", inventory$UNITCD)
+
+oak <- read_csv("WhiteOakData/white-oak-clean.csv")
+oak[is.na(oak)] <- 0
+
+oak_merge <- oak %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
+  summarise(total_removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE),
+            total_growth = sum(SELECT_WHITE_OAK_GROWTH, na.rm = TRUE),
+            total_mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE)) %>% 
+  mutate(total_growth_true = total_growth + total_mortality)
+
+oak_merge$total_growth <- NULL
+colnames(oak_merge)[6] <- "total_growth"
+
+inventory_merge <- inventory %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
+  summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+
+oak_total <- merge(oak_merge, inventory_merge, by = c("STATE_ABBR", "EVAL_GRP_YEAR", "UNIT"))
+
+fire <- read_csv("fire_data.csv")
+colnames(fire) <- c("STATE_ABBR", "num_fires", "acres_burned", "EVAL_GRP_YEAR")
+
+mod.dat <- oak_total %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR) %>% 
+  summarise(total_removal = sum(total_removal),
+            total_growth = sum(total_growth),
+            total_mortality = sum(total_mortality),
+            total_inventory = sum(total_inventory)) %>% 
+  merge(., fire, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
+
+
+
+mod.dat.test <- mod.dat %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(total_inventory),
+            total_mortality = sum(total_mortality),
+            total_removal = sum(as.numeric(total_removal)),
+            total_acres = sum(acres_burned),
+            total_growth = sum(total_growth))
+```
+
+In the simulation outline below, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain rate of change values the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include a yearly shock value to provide a simple example of how we can incorporate the outside variables like wildfire, pests, drought, etc. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
+
+```{r}
+
+# Calculate growth, removal, mortality percent of inventory
+mod.dat.test <- mod.dat.test %>% 
+  mutate(growth.pct = total_growth/total_inventory,
+         remv.pct = total_removal/total_inventory, 
+         mort.pct = total_mortality/total_inventory)
+
+# Build linear models for each and save summary stats
+growth.mod <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.test)
+growth.summary <- summary(growth.mod)
+mort.mod <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.test)
+mort.summary <- summary(mort.mod)
+remv.mod <- lm(remv.pct ~ EVAL_GRP_YEAR, data = mod.dat.test)
+remv.summary <- summary(remv.mod)
+
+years <- 2014:2064
+
+# Build simulation function
+run_sim <- function() {
+  # Define forecast period
+  inv <- 0
+  df <- tibble(year = years, inventory = inv)
+  
+  # Initial inventory equal to 2014 inventory
+  df$inventory[df$year == 2014] <- mod.dat.test$total_inventory[nrow(mod.dat.test)]
+  
+  # Build the normal distributions for growth, mortality, removal
+  growth_dist <- rnorm(100, growth.mod$coefficients[[2]], growth.summary$coefficients[[4]])
+  mortality_dist <- rnorm(100, mort.mod$coefficients[[2]], mort.summary$coefficients[[4]])
+  removal_dist <- rnorm(100, remv.mod$coefficients[[2]], remv.summary$coefficients[[4]])
+  
+  # Define a yearly shock distribution
+  yearly_shock <- rnorm(100, 0, 0.05)
+  
+  # Define rate of change by sampling from distributions created above. We want the rate of change to be the same over the entire forecasted time period, but different for each simulation. This is why we define it prior to the while loop below.
+  growth_roc <- base::sample(growth_dist, 1)
+  mortality_roc <- base::sample(mortality_dist, 1)
+  removal_roc <- base::sample(removal_dist, 1)
+  
+  y <- 2015
+  
+  # Define intercepts by taking the average of the last 5 years for growth, removal, mortality percent of inventory
+  growth_int <- mean(mod.dat.test$growth.pct[(nrow(mod.dat.test)-5):nrow(mod.dat.test)])
+  mortality_int <- mean(mod.dat.test$mort.pct[(nrow(mod.dat.test)-5):nrow(mod.dat.test)])
+  removal_int <- mean(mod.dat.test$remv.pct[(nrow(mod.dat.test)-5):nrow(mod.dat.test)])
+  
+  # Use while loop to build forecast year by year
+  while (y < 2065) {
+    # We want the yearly shock rate to vary by year, so we sample a new value in each loop
+    yearly_shock_rate <- base::sample(yearly_shock, 1)
+    
+    # Define starting inventory value
+    start_inv <- df$inventory[df$year == (y-1)]
+    
+    # Calculate the new growth, removal, mortality percent of inventory for the year
+    new_growth_pct <- (y - 2014)*growth_roc + growth_int
+    new_mort_pct <- (y - 2014)*mortality_roc + mortality_int
+    new_remv_pct <- (y - 2014)*removal_roc + removal_int
+    
+    # Calculate the inventory value for the year
+    df$inventory[df$year == y] <- start_inv[[1]] + 
+    new_growth_pct * start_inv[[1]] - 
+    new_mort_pct * start_inv[[1]] - 
+    new_remv_pct * start_inv[[1]] - 
+    yearly_shock_rate * start_inv[[1]]
+  
+    y <- y+1
+  }
+  return(df$inventory)
+}
+```
+```{r}
+# This is where we define the number of times that we want the simulation to run
+new_df <- tibble(years = years)
+for (i in 2:51) {
+  new_df[, i] <- run_sim()
+}
+```
+```{r}
+new_df_long <- new_df %>% gather(key = sim_number, value = value, - years)
+```
+```{r}
+# Plot the results
+ggplot(new_df_long, aes(x = years, y = value, colour = sim_number)) + 
+  geom_smooth() +
+  #scale_y_continuous(limits = c(0, 35000000000)) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  stat_summary(fun.y=mean, geom="line", colour="black", size = 3) +
+  ggtitle("White Oak Forecast Simulation", subtitle = "The black line indicates the average forecasted value for each year.") +
+  labs(y = "Inventory", x = "Year")
+```
+
+
+### Next Steps
+
+In order to integrate our outside data, our initial plan is to use the additional variables that we have collected to predict the annual percent of mortality and removal (we will still sample the growth the same way we do above). We do not necessarily expect these to be linear models, so we will need to play around with the data and the fits to try to determine the most appropriate method to use for these predictions. My initial thoughts for which variables to use to predict mortality/removal are below:
+
+> *Removal:* Building permits, urbanization
+
+> *Mortality:* Drought, Pests, Wildfire
