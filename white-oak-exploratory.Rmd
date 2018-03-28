@@ -745,13 +745,15 @@ mod.dat <- merge(mod.dat, pdsi_temp)
 pest_temp <- pest_output %>% 
         select(STATE_ABBR, EVAL_GRP_YEAR, Pest_Acres)
 
-mod.dat <- merge(mod.dat, pest_temp)
+mod.dat <- merge(mod.dat, pest_temp, all.x = TRUE)
 
 #Add government spending to mod.dat
 gov_spend_temp <- gov_oak %>% 
         select(State, EVAL_GRP_YEAR, Highway_Exp)
 
-mod.dat <- merge(mod.dat, gov_spend_temp)
+colnames(gov_spend_temp) <- c("STATE_ABBR", "EVAL_GRP_YEAR", "Highway_Exp")
+
+mod.dat <- merge(mod.dat, gov_spend_temp, all.x = TRUE)
         
 
 #Remove temporary varibles
