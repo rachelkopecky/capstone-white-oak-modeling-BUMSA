@@ -19,7 +19,7 @@ output:
     toc_float: yes
 ---
 
-```{r echo = FALSE, warning = FALSE, message = FALSE}
+```{r echo = FALSE, warning = FALSE, message = FALSE }
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9)
 
 library(tidyverse)
@@ -45,13 +45,16 @@ The White Oak data used for this analysis was received from the U.S. Forest Serv
 
 The plot below shows the total White Oak inventory from 1968 through 2017, as recorded in the USFS database.
 
-```{r}
+```{r usfs_data}
 # Read in and manipulate inventory data. These are the raw files from the US Forest service.
 inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
 inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
 inv33 <- read_csv("WhiteOakData/white_oak_inv_33.csv")
 
 inventory <- rbind(inv23, inv24, inv33)
+
+#Remove raw USFS files
+rm(inv23, inv24, inv33)
 
 inventory[is.na(inventory)] <- 0
 
@@ -75,7 +78,7 @@ From this plot we can see a very severe increase in the total inventory after th
 
 The next plot shows the annual growth, removal, and mortality of the White Oak population. We would expect to see similar patterns around the year 2000, to coincide with the change in collection method.
 
-```{r}
+```{r grm_inventory}
 # Read in growth, removal, mortality data
 oak <- read_csv("WhiteOakData/white-oak-clean.csv")
 oak[is.na(oak)] <- 0
@@ -100,7 +103,7 @@ We do see the increase in each after the year 2000, which means that our data is
 
 To get a better idea of how growth, removal, and mortality have truly changed over the years, we can plot each of these as a percentage of the total inventory. 
 
-```{r}
+```{r inv_percentage}
 oak_merge <- oak %>% 
   group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
   summarise(total_removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE),
@@ -140,6 +143,9 @@ oak_total %>%
 #Grab list of eastern states included in Oak data for use in other data sets
 eastern_states <- unique(oak$STATE_ABBR)
 
+#Remove oak and oak_merge dataframes - no longer needed
+rm(oak, oak_merge)
+
 #Grab list of state codes to names for future use
 state_codes <- read.csv("ClimateData/state_codes.csv")
 ```
@@ -148,7 +154,7 @@ We see a lot of variation in the growth and removal data during the time of the 
 
 To properly weight our other potential factors on a national level, we need to know the percentage of oak inventory in each state. 
 
-```{r}
+```{r inv_by_state}
 #Generate percent of total population by state
 oak_yearly <- oak_total %>% 
         group_by(EVAL_GRP_YEAR) %>% 
@@ -168,6 +174,9 @@ oak_state_year <- oak_total %>%
                perc_growth = state_growth / national_growth,
                perc_mortality = state_mortality / national_mortality,
                perc_removal = state_removal / national_removal)
+
+#Remove oak_yearly
+rm(oak_yearly)
 ```
 
 
@@ -177,7 +186,7 @@ oak_state_year <- oak_total %>%
 
 Urbanization is something that the USFS uses in their forecasting, so we would also like to implement this in ours, as it may have some predictive power. The plot below shows the United States urban land area in square miles. Unfortunately, we have only been able to find this data in 10 year intervals thus far, and that may not be enough information to even interpolate the missing values.
 
-```{r}
+```{r urbanization}
 urban_area <- read_csv("UrbanizationData/urban_land_area.csv")
 
 urban_area <- gather(urban_area, 
@@ -203,7 +212,7 @@ Although we do not have annual values, there is a clear upward trend in the urba
 
 As the number of building permits increases, we would expect this to potentially reduce the White Oak population, both for urbanization reasons and for the demand of White Oak within the construction and housing professions. 
 
-```{r}
+```{r building_permits}
 permits <- read_csv("UrbanizationData/BuildingPermits.csv")
 
 colnames(permits)[1] <- "State"
@@ -233,6 +242,8 @@ cor.test(permits_inventory_summary$total_growth, permits_inventory_summary$total
 cor.test(permits_inventory_summary$total_removal, permits_inventory_summary$total_permits)
 cor.test(permits_inventory_summary$total_mortality, permits_inventory_summary$total_permits)
 cor.test(permits_inventory_summary$total_inventory, permits_inventory_summary$total_permits)
+
+rm(permits)
 ```
 We can see that White Oak removal, mortality, and inventory are all significantly correlated to the number of building permits. A significant, positive correlation does not necessarily make sense for total inventory, as we would expect that as removal increases with the construction of new buildings, the overall inventory would decrease. This is something that will require further research and analysis in order to determine the expected sign on this correlation.
 
@@ -243,7 +254,7 @@ The Palmer Drought Severity Index is a measure of dryness in a region based on t
 
 Data: https://www.ncdc.noaa.gov/temp-and-precip/drought/historical-palmers/
 
-```{r}
+```{r palmer_drought}
 pdsi_data <- read.csv("ClimateData/PalmerDroughtSeverityIndex_raw.csv", header = FALSE)
 #Explore a link to the data files online to allow update numbers as necessary
 #Need to read 'procdate.txt' to get date then append it to the necessary file
@@ -298,6 +309,8 @@ pdsi_state_year <- pdsi_data_yearly %>%
         summarise(pdsi = sum(Yearly_Avg * percent_land))
 
 colnames(pdsi_state_year) <- c("STATE_ABBR","EVAL_GRP_YEAR", "yearly_avg_pdsi")
+
+rm(pdsi_data, pdsi_data_yearly)
    
 #Join oak and PDSI data     
 oak_state_year <- merge(oak_state_year, pdsi_state_year, by = c("EVAL_GRP_YEAR", "STATE_ABBR"))
@@ -406,14 +419,14 @@ oak_pdsi_summary %>%
 ```
 Given that change in collection methods in the 2000's, we should
 
-```{r}
+```{r pdsi_corr}
 corrplot(cor(oak_pdsi_summary[2:9]), method = "square", type = "upper")
 ```
 
 While there is no correlation on a yearly basis, it would make sense that there would be some lag in the impact of a drought or flood on the oak population especially the growth and mortality.
 
 Checking for correlation of mortality with a 2 and 3 year lag results in: 
-```{r}
+```{r pdsi_corr_lag_mort}
 #2 Year Lag
 cor.test(oak_pdsi_summary$total_mortality[3:12], oak_pdsi_summary$avg_mor_pdsi[1:10])
 
@@ -421,7 +434,7 @@ cor.test(oak_pdsi_summary$total_mortality[3:12], oak_pdsi_summary$avg_mor_pdsi[1
 cor.test(oak_pdsi_summary$total_mortality[4:12], oak_pdsi_summary$avg_mor_pdsi[1:9])
 ```
 Checking for correlation of growth with a 2 and 3 year lag results in: 
-```{r}
+```{r pdsi_corr_lag_growth}
 #2 Year Lag
 cor.test(oak_pdsi_summary$total_growth[3:12], oak_pdsi_summary$avg_gth_pdsi[1:10])
 
@@ -430,7 +443,7 @@ cor.test(oak_pdsi_summary$total_growth[4:12], oak_pdsi_summary$avg_gth_pdsi[1:9]
 ```
 
 Checking for correlation of inventory with a 2 and 3 year lag results in: 
-```{r}
+```{r pdsi_corr_lag_inv}
 #2 Year Lag
 cor.test(oak_pdsi_summary$total_inventory[3:12], oak_pdsi_summary$avg_inv_pdsi[1:10])
 
@@ -446,7 +459,7 @@ Another outside factor that can potentially influence the White Oak population a
 
 #### Wildfires
 
-```{r}
+```{r wildfires}
 nd_2000 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2000_c20170717.csv")
 nd_2001 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2001_c20170717.csv")
 nd_2002 <- read_csv("NaturalDisasterData/StormEvents_details-ftp_v1.0_d2002_c20170717.csv")
@@ -526,6 +539,8 @@ wildfire_oak <- oak_total %>%
             total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
   merge(., wildfire_roll, by = "EVAL_GRP_YEAR")
 
+rm(nd_all, wildfire)
+
 cor.test(wildfire_oak$total_damage, wildfire_oak$total_mortality)
 ```
 
@@ -533,7 +548,7 @@ There is significant correlation between the damage caused by wildfires and Whit
 
 #### Floods
 
-```{r}
+```{r floods}
 flood <- nd_all_fix %>% 
   filter(EVENT_TYPE == "Flood") 
 
@@ -555,6 +570,8 @@ flood_oak <- oak_total %>%
             total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
   merge(., flood_roll, by = "EVAL_GRP_YEAR")
 
+rm(flood, flood_roll)
+
 cor.test(flood_oak$total_damage, flood_oak$total_mortality)
 ```
 
@@ -562,7 +579,7 @@ There is significant correlation between the damage caused by flood and White Oa
 
 #### Tornados
 
-```{r}
+```{r tornados}
 tornado <- nd_all_fix %>% 
   filter(EVENT_TYPE == "Tornado")
 
@@ -584,11 +601,14 @@ tornado_oak <- oak_total %>%
             total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
   merge(., wildfire_roll, by = "EVAL_GRP_YEAR")
 
+rm(tornado, tornado_roll)
+
 cor.test(tornado_oak$total_damage, tornado_oak$total_mortality)
 
 ```
+
 ### Invasive Species/Pest
-```{r}
+```{r pests}
 #Read in and manipulate pest data.  This data is from the USDA Forest Service.  Data shows mortality acres for all pests by state.  (Data gathered did not allow multiple selections of specfic pests.)  **If needed, we can specify particular pests. 
 pest <- read_csv("Pest/Pest_By_Region.csv")
 spec(pest)
@@ -599,14 +619,23 @@ summary(pest_output)
 
 pest_output$Year = as.numeric(pest_output$Year)
 
+rm(pest)
+
+#Add state codes and rename columns to match other data
+pest_output <- pest_output %>% 
+        merge(state_codes, by = "State") %>% 
+        select(-State_code)
+
+colnames(pest_output) <- c("State","Region","EVAL_GRP_YEAR","Pest_Acres","STATE_ABBR")
+
 summary(pest_output)
 ```
 Base on the results of exploratory analysis the mortality acres for all pests staggered throughout the decade. 
-```{r}
+```{r pest_plot}
 pest_output %>% 
-  group_by(Year) %>% 
-  summarise(total_acre = sum(Acres, na.rm = TRUE)) %>% 
-  ggplot(aes(x = Year, y = total_acre)) +
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_acre = sum(Pest_Acres, na.rm = TRUE)) %>% 
+  ggplot(aes(x = EVAL_GRP_YEAR, y = total_acre)) +
   geom_line() +
   labs(title = "Mortality Acres for All Pests (1997 - 2016)",
        y = "Mortality Acres",
@@ -623,7 +652,7 @@ As an initial pass through the natural disaster data, it is clear that there are
 #### Highway, Natural Resources, Fire Protection, Parks & Rec, Solid Waste
 Hypothesis #1 - Our hypothesis states as more government spending occurs for the state/local highway divisions, we would expect this to potentially reduce the White Oak population. The theory would be as government spending increases, existing highways could potentially see a "face-lift" or there could be expansions of the current interstate system into rural or untapped regions.
 
-```{r}
+```{r gov_spending}
 gov_spending <- read_csv("GovtFinanceData/Govt_Finances_Cleaned.csv")
 
 gov_spending %>% 
@@ -652,6 +681,8 @@ gov_oak <- oak_total %>%
             total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
             total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE)) %>% 
   merge(., gov_spending, by = "EVAL_GRP_YEAR")
+
+rm(gov_spending)
 
 cor.test(gov_oak$Highway_Exp, gov_oak$total_removal)
 
@@ -686,12 +717,11 @@ Simulation of factors that can affect White Oak population over time. Use histor
 * Deeper dive into exploration at the state level (we didn't want to include 36 maps for each outside factor in this file)
 *** Potentially exploration at a regional level?
 
-
 ### Simulation Concept
 
 The idea behind the simulation, is that we utilize multiple regression to quantify the "effect size" of our outside predictors on the growth/removal/mortality of the WO population.
 
-```{r}
+```{r sim_concept}
 
 fire <- read_csv("fire_data.csv")
 colnames(fire) <- c("STATE_ABBR", "num_fires", "acres_burned", "EVAL_GRP_YEAR")
@@ -702,11 +732,30 @@ mod.dat <- permits_inventory %>%
             total_growth = sum(total_growth),
             total_mortality = sum(total_mortality),
             total_inventory = sum(total_inventory),
-            total_permits = sum(total_permits),
-            yearly_avg_pdsi = mean(yearly_avg_pdsi)) %>% 
+            total_permits = sum(total_permits)) %>% 
   merge(., fire, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
 
+#Add weighted PDSI to mod.dat
+pdsi_temp <- inventory_pdsi %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, PDSI)
 
+mod.dat <- merge(mod.dat, pdsi_temp)
+
+#Add pest results to mod.dat
+pest_temp <- pest_output %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, Pest_Acres)
+
+mod.dat <- merge(mod.dat, pest_temp)
+
+#Add government spending to mod.dat
+gov_spend_temp <- gov_oak %>% 
+        select(State, EVAL_GRP_YEAR, Highway_Exp)
+
+mod.dat <- merge(mod.dat, gov_spend_temp)
+        
+
+#Remove temporary varibles
+rm(psdi_temp, pest_temp, gov_spend_temp)
 
 mod.dat.test <- mod.dat %>% 
   group_by(EVAL_GRP_YEAR) %>% 
@@ -728,6 +777,10 @@ r8 <- c("TX", "OK", "LA", "AR", "MS", "AL", "GA", "FL", "TN", "KY", "VA", "NC", 
 mod.dat$region <- ifelse(mod.dat$STATE_ABBR %in% r9, "R9", 
                          ifelse(mod.dat$STATE_ABBR %in% r8, "R8",
                                 ifelse(mod.dat$STATE_ABBR %in% r2, "R2", "NA")))
+
+mod.dat <- oak_state_year %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, yearly_avg_pdsi) %>% 
+        merge(mod.dat, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
 
 mod.dat.r9 <- mod.dat %>% 
   filter(region == "R9") %>% 
