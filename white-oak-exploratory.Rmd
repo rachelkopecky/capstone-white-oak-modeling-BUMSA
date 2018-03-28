@@ -762,6 +762,12 @@ mod.dat <- merge(mod.dat, gov_spend_temp, all.x = TRUE)
 #Remove temporary varibles
 rm(pdsi_temp, pest_summary, gov_spend_temp)
 
+#Correlation Test
+corrplot(cor(mod.dat[3:12]), method = "square", type = "upper")
+
+#Further test correlation between number of wild fires and PDSI
+cor.test(mod.dat$num_fires, mod.dat$PDSI)
+
 mod.dat.test <- mod.dat %>% 
   group_by(EVAL_GRP_YEAR) %>% 
   summarise(total_inventory = sum(total_inventory),
