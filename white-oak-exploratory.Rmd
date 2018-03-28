@@ -742,10 +742,13 @@ pdsi_temp <- inventory_pdsi %>%
 mod.dat <- merge(mod.dat, pdsi_temp)
 
 #Add pest results to mod.dat
-pest_temp <- pest_output %>% 
-        select(STATE_ABBR, EVAL_GRP_YEAR, Pest_Acres)
+#Summary to state level - removing region
+pest_summary <- pest_output %>% 
+        select(STATE_ABBR, EVAL_GRP_YEAR, Pest_Acres) %>% 
+        group_by(STATE_ABBR, EVAL_GRP_YEAR) %>% 
+        summarize(Pest_Acres = sum(Pest_Acres))
 
-mod.dat <- merge(mod.dat, pest_temp, all.x = TRUE)
+mod.dat <- merge(mod.dat, pest_summary, all.x = TRUE)
 
 #Add government spending to mod.dat
 gov_spend_temp <- gov_oak %>% 
@@ -757,7 +760,7 @@ mod.dat <- merge(mod.dat, gov_spend_temp, all.x = TRUE)
         
 
 #Remove temporary varibles
-rm(psdi_temp, pest_temp, gov_spend_temp)
+rm(pdsi_temp, pest_summary, gov_spend_temp)
 
 mod.dat.test <- mod.dat %>% 
   group_by(EVAL_GRP_YEAR) %>% 
