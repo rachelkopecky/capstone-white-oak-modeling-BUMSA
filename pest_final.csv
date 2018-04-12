@@ -1,0 +1,1221 @@
+State,Region,Year,Acres,State_code,STATE_ABBR,region
+Alabama,Southern,1997,0,1,AL,R8
+Alabama,Southern,1999,0,1,AL,R8
+Alabama,Southern,1998,0,1,AL,R8
+Alabama,Southern,2e3,0,1,AL,R8
+Alabama,Southern,2005,588.1,1,AL,R8
+Alabama,Southern,2009,1.5,1,AL,R8
+Alabama,Southern,2011,23.5,1,AL,R8
+Alabama,Southern,2001,0,1,AL,R8
+Alabama,Southern,2006,0,1,AL,R8
+Alabama,Southern,2012,3.7,1,AL,R8
+Alabama,Southern,2016,939.9,1,AL,R8
+Alabama,Southern,2002,3483.2,1,AL,R8
+Alabama,Southern,2003,1386.8,1,AL,R8
+Alabama,Southern,2007,521,1,AL,R8
+Alabama,Southern,2013,33.5,1,AL,R8
+Alabama,Southern,2015,190,1,AL,R8
+Alabama,Southern,2004,2839.9,1,AL,R8
+Alabama,Southern,2008,26,1,AL,R8
+Alabama,Southern,2010,5,1,AL,R8
+Alabama,Southern,2014,49.3,1,AL,R8
+Alaska,Alaska,1997,575070.7,50,AK,"NA"
+Alaska,Alaska,1999,291152.8,50,AK,"NA"
+Alaska,Alaska,2003,124727,50,AK,"NA"
+Alaska,Alaska,2005,133035.1,50,AK,"NA"
+Alaska,Alaska,2009,154904,50,AK,"NA"
+Alaska,Alaska,2011,89378.1,50,AK,"NA"
+Alaska,Alaska,2015,89354.9,50,AK,"NA"
+Alaska,Alaska,2013,54253.3,50,AK,"NA"
+Alaska,Alaska,1998,331958.1,50,AK,"NA"
+Alaska,Alaska,2e3,122260.5,50,AK,"NA"
+Alaska,Alaska,2004,181115.2,50,AK,"NA"
+Alaska,Alaska,2006,167450.8,50,AK,"NA"
+Alaska,Alaska,2010,143501.5,50,AK,"NA"
+Alaska,Alaska,2012,47267.3,50,AK,"NA"
+Alaska,Alaska,2016,246331.2,50,AK,"NA"
+Alaska,Alaska,2014,58576.9,50,AK,"NA"
+Alaska,Alaska,2001,233066,50,AK,"NA"
+Alaska,Alaska,2007,221434.9,50,AK,"NA"
+Alaska,Alaska,2002,62508.6,50,AK,"NA"
+Alaska,Alaska,2008,144357.7,50,AK,"NA"
+Arizona,Southwestern,2007,21571.6,2,AZ,"NA"
+Arizona,Southwestern,1997,77685.9,2,AZ,"NA"
+Arizona,Southwestern,2011,5524.9,2,AZ,"NA"
+Arizona,Southwestern,2013,169979.8,2,AZ,"NA"
+Arizona,Southwestern,2008,19345.8,2,AZ,"NA"
+Arizona,Southwestern,1998,30241,2,AZ,"NA"
+Arizona,Southwestern,2012,47827.9,2,AZ,"NA"
+Arizona,Southwestern,2014,145352.2,2,AZ,"NA"
+Arizona,Southwestern,2005,38787.4,2,AZ,"NA"
+Arizona,Southwestern,2001,134580.8,2,AZ,"NA"
+Arizona,Southwestern,2016,112759.8,2,AZ,"NA"
+Arizona,Southwestern,2003,1705515.3,2,AZ,"NA"
+Arizona,Southwestern,2006,30416.2,2,AZ,"NA"
+Arizona,Southwestern,2009,38829.7,2,AZ,"NA"
+Arizona,Southwestern,2e3,16143,2,AZ,"NA"
+Arizona,Southwestern,2015,40768,2,AZ,"NA"
+Arizona,Southwestern,2002,517271.6,2,AZ,"NA"
+Arizona,Southwestern,2004,138550.4,2,AZ,"NA"
+Arizona,Southwestern,2010,22800.8,2,AZ,"NA"
+Arizona,Southwestern,1999,12771.1,2,AZ,"NA"
+Arkansas,Southern,2011,0,3,AR,R8
+Arkansas,Southern,1999,0,3,AR,R8
+Arkansas,Southern,2003,596.8,3,AR,R8
+Arkansas,Southern,1997,0,3,AR,R8
+Arkansas,Southern,1998,0,3,AR,R8
+Arkansas,Southern,2013,0,3,AR,R8
+Arkansas,Southern,2e3,0,3,AR,R8
+Arkansas,Southern,2005,0,3,AR,R8
+Arkansas,Southern,2009,0,3,AR,R8
+Arkansas,Southern,2010,234.1,3,AR,R8
+Arkansas,Southern,2015,14952.1,3,AR,R8
+Arkansas,Southern,2004,0,3,AR,R8
+Arkansas,Southern,2006,0,3,AR,R8
+Arkansas,Southern,2007,0,3,AR,R8
+Arkansas,Southern,2012,0,3,AR,R8
+Arkansas,Southern,2002,16815.4,3,AR,R8
+Arkansas,Southern,2001,0,3,AR,R8
+Arkansas,Southern,2014,181.2,3,AR,R8
+Arkansas,Southern,2016,22604.2,3,AR,R8
+Arkansas,Southern,2008,0,3,AR,R8
+California,Pacific Northwest,2004,4198.3,4,CA,"NA"
+California,Pacific Northwest,2010,1587.1,4,CA,"NA"
+California,Pacific Northwest,2016,1203.3,4,CA,"NA"
+California,Pacific Northwest,2003,863.2,4,CA,"NA"
+California,Pacific Northwest,2009,445,4,CA,"NA"
+California,Intermountain,2013,8702.1,4,CA,"NA"
+California,Pacific Northwest,2015,2319.2,4,CA,"NA"
+California,Pacific Southwest,1997,207545.7,4,CA,"NA"
+California,Pacific Northwest,2e3,129.1,4,CA,"NA"
+California,Intermountain,2014,13622.8,4,CA,"NA"
+California,Pacific Southwest,1998,97544.1,4,CA,"NA"
+California,Intermountain,2003,40292.2,4,CA,"NA"
+California,Pacific Southwest,2004,1647215.3,4,CA,"NA"
+California,Pacific Northwest,1997,16.6,4,CA,"NA"
+California,Pacific Northwest,1999,162.2,4,CA,"NA"
+California,Intermountain,2011,2849.9,4,CA,"NA"
+California,Pacific Southwest,2012,507657,4,CA,"NA"
+California,Pacific Southwest,2016,4288458.4,4,CA,"NA"
+California,Pacific Southwest,2003,2975170.4,4,CA,"NA"
+California,Intermountain,2004,41600.1,4,CA,"NA"
+California,Pacific Northwest,1998,44.9,4,CA,"NA"
+California,Pacific Southwest,2011,532960.7,4,CA,"NA"
+California,Pacific Southwest,2015,2755049.5,4,CA,"NA"
+California,Intermountain,2012,3843.3,4,CA,"NA"
+California,Pacific Northwest,2002,1211,4,CA,"NA"
+California,Pacific Northwest,2006,446.4,4,CA,"NA"
+California,Intermountain,2009,5721,4,CA,"NA"
+California,Intermountain,2015,10559.4,4,CA,"NA"
+California,Pacific Southwest,2010,702656.4,4,CA,"NA"
+California,Pacific Southwest,2006,398408.3,4,CA,"NA"
+California,Pacific Northwest,2001,171.5,4,CA,"NA"
+California,Pacific Northwest,2005,1837.3,4,CA,"NA"
+California,Pacific Southwest,1999,25146.1,4,CA,"NA"
+California,Pacific Southwest,2009,380065.1,4,CA,"NA"
+California,Intermountain,2010,4175.9,4,CA,"NA"
+California,Intermountain,2016,14806.8,4,CA,"NA"
+California,Intermountain,1997,359,4,CA,"NA"
+California,Pacific Southwest,2013,471254,4,CA,"NA"
+California,Intermountain,1999,611,4,CA,"NA"
+California,Pacific Southwest,2e3,60128.7,4,CA,"NA"
+California,Pacific Northwest,2012,1462.6,4,CA,"NA"
+California,Intermountain,2007,490.4,4,CA,"NA"
+California,Pacific Northwest,2011,605.2,4,CA,"NA"
+California,Pacific Southwest,2008,206561.8,4,CA,"NA"
+California,Intermountain,1998,858.3,4,CA,"NA"
+California,Pacific Southwest,2014,865815.6,4,CA,"NA"
+California,Pacific Northwest,2008,72.9,4,CA,"NA"
+California,Pacific Southwest,2005,947392.5,4,CA,"NA"
+California,Pacific Southwest,2007,298801.7,4,CA,"NA"
+California,Intermountain,2008,5145.4,4,CA,"NA"
+California,Pacific Northwest,2013,159.5,4,CA,"NA"
+California,Intermountain,2e3,231.3,4,CA,"NA"
+California,Intermountain,2001,251.8,4,CA,"NA"
+California,Intermountain,2005,4265.2,4,CA,"NA"
+California,Pacific Southwest,2001,87045.2,4,CA,"NA"
+California,Pacific Southwest,2002,930490.1,4,CA,"NA"
+California,Pacific Northwest,2014,4322.1,4,CA,"NA"
+California,Intermountain,2002,1763.8,4,CA,"NA"
+California,Intermountain,2006,3897.4,4,CA,"NA"
+California,Pacific Northwest,2007,489.9,4,CA,"NA"
+Colorado,Intermountain,2008,10.8,5,CO,"NA"
+Colorado,Intermountain,2009,2.8,5,CO,"NA"
+Colorado,Intermountain,2011,5,5,CO,"NA"
+Colorado,Intermountain,2010,2.5,5,CO,"NA"
+Colorado,Intermountain,2012,2.5,5,CO,"NA"
+Colorado,Intermountain,2006,9.7,5,CO,"NA"
+Colorado,Rocky Mountain,1998,372717.2,5,CO,"NA"
+Colorado,Intermountain,2013,36.4,5,CO,"NA"
+Colorado,Intermountain,2015,383.7,5,CO,"NA"
+Colorado,Rocky Mountain,2009,1707205,5,CO,"NA"
+Colorado,Rocky Mountain,2011,1258079.2,5,CO,"NA"
+Colorado,Intermountain,2014,3.5,5,CO,"NA"
+Colorado,Rocky Mountain,2006,1148312.4,5,CO,"NA"
+Colorado,Intermountain,2007,4.8,5,CO,"NA"
+Colorado,Intermountain,2001,189.2,5,CO,"NA"
+Colorado,Rocky Mountain,2003,1839700.9,5,CO,"NA"
+Colorado,Intermountain,2016,41.1,5,CO,"NA"
+Colorado,Rocky Mountain,2005,1190436,5,CO,"NA"
+Colorado,Intermountain,2002,21.3,5,CO,"NA"
+Colorado,Rocky Mountain,2012,817946.5,5,CO,"NA"
+Colorado,Rocky Mountain,2015,567936.6,5,CO,"NA"
+Colorado,Rocky Mountain,2013,762262.4,5,CO,"NA"
+Colorado,Intermountain,2005,98.5,5,CO,"NA"
+Colorado,Intermountain,2003,159.6,5,CO,"NA"
+Colorado,Rocky Mountain,2016,504235.1,5,CO,"NA"
+Colorado,Rocky Mountain,1997,111569.9,5,CO,"NA"
+Colorado,Rocky Mountain,2010,1370687.8,5,CO,"NA"
+Colorado,Intermountain,2e3,13.6,5,CO,"NA"
+Colorado,Rocky Mountain,2004,1447864.6,5,CO,"NA"
+Colorado,Rocky Mountain,2007,1476090.4,5,CO,"NA"
+Colorado,Intermountain,2004,482.6,5,CO,"NA"
+Colorado,Rocky Mountain,2001,432386.8,5,CO,"NA"
+Colorado,Intermountain,1999,9.8,5,CO,"NA"
+Colorado,Rocky Mountain,2008,2110125.5,5,CO,"NA"
+Colorado,Intermountain,1997,6.8,5,CO,"NA"
+Colorado,Intermountain,1998,3.4,5,CO,"NA"
+Colorado,Rocky Mountain,2002,669717.2,5,CO,"NA"
+Colorado,Rocky Mountain,2014,741477.8,5,CO,"NA"
+Colorado,Rocky Mountain,1999,259529.1,5,CO,"NA"
+Colorado,Rocky Mountain,2e3,364004.6,5,CO,"NA"
+Connecticut,Northeastern Area,1999,0,6,CT,R9
+Connecticut,Northeastern Area,2001,18.4,6,CT,R9
+Connecticut,Northeastern Area,2005,42.8,6,CT,R9
+Connecticut,Northeastern Area,2006,135.9,6,CT,R9
+Connecticut,Northeastern Area,2009,645.6,6,CT,R9
+Connecticut,Northeastern Area,1998,0,6,CT,R9
+Connecticut,Northeastern Area,2e3,0,6,CT,R9
+Connecticut,Northeastern Area,2008,12.9,6,CT,R9
+Connecticut,Northeastern Area,2012,0,6,CT,R9
+Connecticut,Northeastern Area,1997,0,6,CT,R9
+Connecticut,Northeastern Area,2003,0,6,CT,R9
+Connecticut,Northeastern Area,2007,0,6,CT,R9
+Connecticut,Northeastern Area,2011,66.9,6,CT,R9
+Connecticut,Northeastern Area,2013,0,6,CT,R9
+Connecticut,Northeastern Area,2015,452.1,6,CT,R9
+Connecticut,Northeastern Area,2002,0.2,6,CT,R9
+Connecticut,Northeastern Area,2004,484.1,6,CT,R9
+Connecticut,Northeastern Area,2010,0,6,CT,R9
+Connecticut,Northeastern Area,2014,135.1,6,CT,R9
+Connecticut,Northeastern Area,2016,7628.3,6,CT,R9
+Delaware,Northeastern Area,2e3,0,7,DE,R9
+Delaware,Northeastern Area,2010,66.7,7,DE,R9
+Delaware,Northeastern Area,1997,0,7,DE,R9
+Delaware,Northeastern Area,2001,0,7,DE,R9
+Delaware,Northeastern Area,1999,0,7,DE,R9
+Delaware,Northeastern Area,2005,0,7,DE,R9
+Delaware,Northeastern Area,2003,0,7,DE,R9
+Delaware,Northeastern Area,2006,0,7,DE,R9
+Delaware,Northeastern Area,1998,0,7,DE,R9
+Delaware,Northeastern Area,2002,334.2,7,DE,R9
+Delaware,Northeastern Area,2009,43.7,7,DE,R9
+Delaware,Northeastern Area,2007,63.8,7,DE,R9
+Delaware,Northeastern Area,2011,0,7,DE,R9
+Delaware,Northeastern Area,2004,0,7,DE,R9
+Delaware,Northeastern Area,2012,292.2,7,DE,R9
+Delaware,Northeastern Area,2008,0,7,DE,R9
+Delaware,Northeastern Area,2015,25.1,7,DE,R9
+Delaware,Northeastern Area,2013,54.7,7,DE,R9
+Delaware,Northeastern Area,2014,21.2,7,DE,R9
+Delaware,Northeastern Area,2016,16.2,7,DE,R9
+Florida,Southern,1999,0,8,FL,R8
+Florida,Southern,2001,0,8,FL,R8
+Florida,Southern,2005,0,8,FL,R8
+Florida,Southern,2e3,0,8,FL,R8
+Florida,Southern,1997,0,8,FL,R8
+Florida,Southern,1998,0,8,FL,R8
+Florida,Southern,2002,1141.3,8,FL,R8
+Florida,Southern,2011,2,8,FL,R8
+Florida,Southern,2015,61.7,8,FL,R8
+Florida,Southern,2003,1637.2,8,FL,R8
+Florida,Southern,2007,0,8,FL,R8
+Florida,Southern,2006,280.5,8,FL,R8
+Florida,Southern,2012,310.1,8,FL,R8
+Florida,Southern,2004,24929.5,8,FL,R8
+Florida,Southern,2008,211.3,8,FL,R8
+Florida,Southern,2009,36.4,8,FL,R8
+Florida,Southern,2013,187.1,8,FL,R8
+Florida,Southern,2016,1121.1,8,FL,R8
+Florida,Southern,2010,4,8,FL,R8
+Florida,Southern,2014,35.4,8,FL,R8
+Georgia,Southern,2003,974.7,9,GA,R8
+Georgia,Southern,1999,0,9,GA,R8
+Georgia,Southern,2e3,0,9,GA,R8
+Georgia,Southern,1997,0,9,GA,R8
+Georgia,Southern,2001,0,9,GA,R8
+Georgia,Southern,2005,265,9,GA,R8
+Georgia,Southern,2009,438.6,9,GA,R8
+Georgia,Southern,2004,274.9,9,GA,R8
+Georgia,Southern,1998,18.4,9,GA,R8
+Georgia,Southern,2002,4197,9,GA,R8
+Georgia,Southern,2006,362.3,9,GA,R8
+Georgia,Southern,2011,54.1,9,GA,R8
+Georgia,Southern,2015,81,9,GA,R8
+Georgia,Southern,2007,7443.8,9,GA,R8
+Georgia,Southern,2013,318.6,9,GA,R8
+Georgia,Southern,2010,1701.4,9,GA,R8
+Georgia,Southern,2012,0,9,GA,R8
+Georgia,Southern,2008,63,9,GA,R8
+Georgia,Southern,2014,2090,9,GA,R8
+Georgia,Southern,2016,1173,9,GA,R8
+Hawaii,Pacific Southwest,1999,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2013,35.9,51,HI,"NA"
+Hawaii,Pacific Southwest,2015,55471.2,51,HI,"NA"
+Hawaii,Pacific Southwest,2016,49027.2,51,HI,"NA"
+Hawaii,Pacific Southwest,2014,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2009,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2003,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2001,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2e3,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2011,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2007,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2004,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2002,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2012,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2005,0,51,HI,"NA"
+Hawaii,Pacific Southwest,1997,0,51,HI,"NA"
+Hawaii,Pacific Southwest,1998,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2010,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2008,0,51,HI,"NA"
+Hawaii,Pacific Southwest,2006,0,51,HI,"NA"
+Idaho,Northern,2008,837615.3,10,ID,"NA"
+Idaho,Northern,2012,337212.7,10,ID,"NA"
+Idaho,Intermountain,2007,343893,10,ID,"NA"
+Idaho,Northern,2002,551336.8,10,ID,"NA"
+Idaho,Northern,2010,1062549,10,ID,"NA"
+Idaho,Intermountain,2008,470587.1,10,ID,"NA"
+Idaho,Northern,2007,110535.2,10,ID,"NA"
+Idaho,Northern,2011,199990,10,ID,"NA"
+Idaho,Northern,2006,115383.5,10,ID,"NA"
+Idaho,Intermountain,2013,127094.6,10,ID,"NA"
+Idaho,Intermountain,2005,373604.9,10,ID,"NA"
+Idaho,Intermountain,2001,91362.6,10,ID,"NA"
+Idaho,Intermountain,2014,116443.2,10,ID,"NA"
+Idaho,Northern,2014,269604.2,10,ID,"NA"
+Idaho,Intermountain,2011,694211.8,10,ID,"NA"
+Idaho,Intermountain,2009,1200038.3,10,ID,"NA"
+Idaho,Intermountain,1999,52326.7,10,ID,"NA"
+Idaho,Northern,2003,442357.6,10,ID,"NA"
+Idaho,Intermountain,2012,457628.4,10,ID,"NA"
+Idaho,Northern,2013,253706.7,10,ID,"NA"
+Idaho,Northern,2009,903545.2,10,ID,"NA"
+Idaho,Northern,2004,571641.7,10,ID,"NA"
+Idaho,Northern,1998,206352.6,10,ID,"NA"
+Idaho,Intermountain,2015,95886.5,10,ID,"NA"
+Idaho,Northern,2015,164271.7,10,ID,"NA"
+Idaho,Northern,1997,205437.6,10,ID,"NA"
+Idaho,Northern,1999,307125.4,10,ID,"NA"
+Idaho,Northern,2016,167428.4,10,ID,"NA"
+Idaho,Intermountain,2003,256164.8,10,ID,"NA"
+Idaho,Intermountain,2002,138314,10,ID,"NA"
+Idaho,Intermountain,2e3,44134.9,10,ID,"NA"
+Idaho,Northern,2005,337469.4,10,ID,"NA"
+Idaho,Intermountain,2006,256239.2,10,ID,"NA"
+Idaho,Northern,2e3,326254.6,10,ID,"NA"
+Idaho,Intermountain,2004,563536.3,10,ID,"NA"
+Idaho,Northern,2001,382193.2,10,ID,"NA"
+Idaho,Intermountain,1997,77393.1,10,ID,"NA"
+Idaho,Intermountain,2010,1001345,10,ID,"NA"
+Idaho,Intermountain,2016,74188.1,10,ID,"NA"
+Idaho,Intermountain,1998,29694.4,10,ID,"NA"
+Illinois,Northeastern Area,1997,0,11,IL,R9
+Illinois,Northeastern Area,1998,0,11,IL,R9
+Illinois,Northeastern Area,1999,0,11,IL,R9
+Illinois,Northeastern Area,2007,0,11,IL,R9
+Illinois,Northeastern Area,2008,0,11,IL,R9
+Illinois,Northeastern Area,2e3,0,11,IL,R9
+Illinois,Northeastern Area,2002,0,11,IL,R9
+Illinois,Northeastern Area,2001,0,11,IL,R9
+Illinois,Northeastern Area,2003,0,11,IL,R9
+Illinois,Northeastern Area,2005,0,11,IL,R9
+Illinois,Northeastern Area,2012,760.9,11,IL,R9
+Illinois,Northeastern Area,2014,422.8,11,IL,R9
+Illinois,Northeastern Area,2010,0,11,IL,R9
+Illinois,Northeastern Area,2011,0,11,IL,R9
+Illinois,Northeastern Area,2006,0,11,IL,R9
+Illinois,Northeastern Area,2015,137.8,11,IL,R9
+Illinois,Northeastern Area,2004,358.2,11,IL,R9
+Illinois,Northeastern Area,2013,4,11,IL,R9
+Illinois,Northeastern Area,2009,0,11,IL,R9
+Illinois,Northeastern Area,2016,3629.3,11,IL,R9
+Indiana,Northeastern Area,2009,5439.9,12,IN,R9
+Indiana,Northeastern Area,1998,0,12,IN,R9
+Indiana,Northeastern Area,2e3,0,12,IN,R9
+Indiana,Northeastern Area,1999,0,12,IN,R9
+Indiana,Northeastern Area,2001,0,12,IN,R9
+Indiana,Northeastern Area,2005,18.4,12,IN,R9
+Indiana,Northeastern Area,1997,0,12,IN,R9
+Indiana,Northeastern Area,2002,0,12,IN,R9
+Indiana,Northeastern Area,2004,0,12,IN,R9
+Indiana,Northeastern Area,2006,0,12,IN,R9
+Indiana,Northeastern Area,2003,0,12,IN,R9
+Indiana,Northeastern Area,2007,13763.3,12,IN,R9
+Indiana,Northeastern Area,2013,12323.3,12,IN,R9
+Indiana,Northeastern Area,2011,15743.9,12,IN,R9
+Indiana,Northeastern Area,2016,13851,12,IN,R9
+Indiana,Northeastern Area,2012,15866,12,IN,R9
+Indiana,Northeastern Area,2014,16341.5,12,IN,R9
+Indiana,Northeastern Area,2008,8378.8,12,IN,R9
+Indiana,Northeastern Area,2015,13698.9,12,IN,R9
+Indiana,Northeastern Area,2010,15390.7,12,IN,R9
+Iowa,Northeastern Area,2011,199429,13,IA,R9
+Iowa,Northeastern Area,1997,0,13,IA,R9
+Iowa,Northeastern Area,1999,0,13,IA,R9
+Iowa,Northeastern Area,2e3,0,13,IA,R9
+Iowa,Northeastern Area,2001,0,13,IA,R9
+Iowa,Northeastern Area,2002,0,13,IA,R9
+Iowa,Northeastern Area,2003,0,13,IA,R9
+Iowa,Northeastern Area,2013,1737.9,13,IA,R9
+Iowa,Northeastern Area,2010,207.3,13,IA,R9
+Iowa,Northeastern Area,2005,0,13,IA,R9
+Iowa,Northeastern Area,2004,0.9,13,IA,R9
+Iowa,Northeastern Area,2006,0,13,IA,R9
+Iowa,Northeastern Area,2008,6521.8,13,IA,R9
+Iowa,Northeastern Area,2012,1250.5,13,IA,R9
+Iowa,Northeastern Area,2009,1098.2,13,IA,R9
+Iowa,Northeastern Area,2015,24190,13,IA,R9
+Iowa,Northeastern Area,2014,2050.3,13,IA,R9
+Iowa,Northeastern Area,2016,147629.6,13,IA,R9
+Iowa,Northeastern Area,1998,0,13,IA,R9
+Iowa,Northeastern Area,2007,0,13,IA,R9
+Kansas,Rocky Mountain,2005,0,14,KS,R2
+Kansas,Rocky Mountain,2007,0,14,KS,R2
+Kansas,Rocky Mountain,2008,0,14,KS,R2
+Kansas,Rocky Mountain,2003,9.1,14,KS,R2
+Kansas,Rocky Mountain,2015,0,14,KS,R2
+Kansas,Rocky Mountain,2016,0,14,KS,R2
+Kansas,Rocky Mountain,2004,0,14,KS,R2
+Kansas,Rocky Mountain,2009,0,14,KS,R2
+Kansas,Rocky Mountain,2013,0,14,KS,R2
+Kansas,Rocky Mountain,2006,0,14,KS,R2
+Kansas,Rocky Mountain,2011,0,14,KS,R2
+Kansas,Rocky Mountain,1997,0,14,KS,R2
+Kansas,Rocky Mountain,1999,0,14,KS,R2
+Kansas,Rocky Mountain,2e3,0,14,KS,R2
+Kansas,Rocky Mountain,1998,0,14,KS,R2
+Kansas,Rocky Mountain,2002,0,14,KS,R2
+Kansas,Rocky Mountain,2010,0,14,KS,R2
+Kansas,Rocky Mountain,2014,0,14,KS,R2
+Kansas,Rocky Mountain,2012,0,14,KS,R2
+Kansas,Rocky Mountain,2001,0,14,KS,R2
+Kentucky,Southern,1999,0,15,KY,R8
+Kentucky,Southern,2005,1523.5,15,KY,R8
+Kentucky,Southern,1997,0,15,KY,R8
+Kentucky,Southern,1998,0,15,KY,R8
+Kentucky,Southern,2003,2425.6,15,KY,R8
+Kentucky,Southern,2006,0,15,KY,R8
+Kentucky,Southern,2011,0,15,KY,R8
+Kentucky,Southern,2001,0,15,KY,R8
+Kentucky,Southern,2e3,0,15,KY,R8
+Kentucky,Southern,2007,0,15,KY,R8
+Kentucky,Southern,2008,0,15,KY,R8
+Kentucky,Southern,2012,0,15,KY,R8
+Kentucky,Southern,2009,0.9,15,KY,R8
+Kentucky,Southern,2004,730.3,15,KY,R8
+Kentucky,Southern,2015,0,15,KY,R8
+Kentucky,Southern,2016,1323.1,15,KY,R8
+Kentucky,Southern,2002,3213.9,15,KY,R8
+Kentucky,Southern,2013,0,15,KY,R8
+Kentucky,Southern,2014,301.6,15,KY,R8
+Kentucky,Southern,2010,0,15,KY,R8
+Louisiana,Southern,2005,159899,16,LA,R8
+Louisiana,Southern,2009,27.1,16,LA,R8
+Louisiana,Southern,1999,0,16,LA,R8
+Louisiana,Southern,2e3,0,16,LA,R8
+Louisiana,Southern,2006,102.4,16,LA,R8
+Louisiana,Southern,1997,0,16,LA,R8
+Louisiana,Southern,2001,0,16,LA,R8
+Louisiana,Southern,2003,202001.2,16,LA,R8
+Louisiana,Southern,2007,49.5,16,LA,R8
+Louisiana,Southern,2010,11613.8,16,LA,R8
+Louisiana,Southern,1998,0,16,LA,R8
+Louisiana,Southern,2002,44.6,16,LA,R8
+Louisiana,Southern,2004,53.1,16,LA,R8
+Louisiana,Southern,2011,4.2,16,LA,R8
+Louisiana,Southern,2015,7944,16,LA,R8
+Louisiana,Southern,2013,0.2,16,LA,R8
+Louisiana,Southern,2014,3.6,16,LA,R8
+Louisiana,Southern,2008,7.8,16,LA,R8
+Louisiana,Southern,2012,161.2,16,LA,R8
+Louisiana,Southern,2016,0.8,16,LA,R8
+Maine,Northeastern Area,1999,15532.5,17,ME,R9
+Maine,Northeastern Area,2001,0,17,ME,R9
+Maine,Northeastern Area,2005,9048.5,17,ME,R9
+Maine,Northeastern Area,2015,369.9,17,ME,R9
+Maine,Northeastern Area,1998,274.3,17,ME,R9
+Maine,Northeastern Area,2004,12443.2,17,ME,R9
+Maine,Northeastern Area,2006,7120275.3,17,ME,R9
+Maine,Northeastern Area,1997,0,17,ME,R9
+Maine,Northeastern Area,2009,237.7,17,ME,R9
+Maine,Northeastern Area,2003,26748.3,17,ME,R9
+Maine,Northeastern Area,2007,3675,17,ME,R9
+Maine,Northeastern Area,2012,37.2,17,ME,R9
+Maine,Northeastern Area,2014,444.8,17,ME,R9
+Maine,Northeastern Area,2e3,0,17,ME,R9
+Maine,Northeastern Area,2008,7.2,17,ME,R9
+Maine,Northeastern Area,2011,194,17,ME,R9
+Maine,Northeastern Area,2013,0,17,ME,R9
+Maine,Northeastern Area,2002,645761.1,17,ME,R9
+Maine,Northeastern Area,2010,435.7,17,ME,R9
+Maine,Northeastern Area,2016,2268.5,17,ME,R9
+Maryland,Northeastern Area,2006,0,18,MD,R9
+Maryland,Northeastern Area,2005,98.2,18,MD,R9
+Maryland,Northeastern Area,1999,605.8,18,MD,R9
+Maryland,Northeastern Area,2003,0,18,MD,R9
+Maryland,Northeastern Area,1998,0,18,MD,R9
+Maryland,Northeastern Area,2009,4521.6,18,MD,R9
+Maryland,Northeastern Area,2001,0,18,MD,R9
+Maryland,Northeastern Area,1997,0,18,MD,R9
+Maryland,Northeastern Area,2007,0,18,MD,R9
+Maryland,Northeastern Area,2e3,457,18,MD,R9
+Maryland,Northeastern Area,2008,5895.5,18,MD,R9
+Maryland,Northeastern Area,2010,681.9,18,MD,R9
+Maryland,Northeastern Area,2002,0,18,MD,R9
+Maryland,Northeastern Area,2011,9.4,18,MD,R9
+Maryland,Northeastern Area,2015,153.3,18,MD,R9
+Maryland,Northeastern Area,2013,17897.3,18,MD,R9
+Maryland,Northeastern Area,2004,0,18,MD,R9
+Maryland,Northeastern Area,2014,389.4,18,MD,R9
+Maryland,Northeastern Area,2012,18006.9,18,MD,R9
+Maryland,Northeastern Area,2016,30730,18,MD,R9
+Massachusetts,Northeastern Area,1997,3512,19,MA,R9
+Massachusetts,Northeastern Area,2011,12711.1,19,MA,R9
+Massachusetts,Northeastern Area,2005,160403,19,MA,R9
+Massachusetts,Northeastern Area,2010,6391.3,19,MA,R9
+Massachusetts,Northeastern Area,1999,1673.7,19,MA,R9
+Massachusetts,Northeastern Area,2003,5793.6,19,MA,R9
+Massachusetts,Northeastern Area,2e3,574.9,19,MA,R9
+Massachusetts,Northeastern Area,2013,2537.5,19,MA,R9
+Massachusetts,Northeastern Area,2012,5867.9,19,MA,R9
+Massachusetts,Northeastern Area,2007,11697.4,19,MA,R9
+Massachusetts,Northeastern Area,2009,18081.9,19,MA,R9
+Massachusetts,Northeastern Area,2004,860.5,19,MA,R9
+Massachusetts,Northeastern Area,2006,133.9,19,MA,R9
+Massachusetts,Northeastern Area,1998,5310.5,19,MA,R9
+Massachusetts,Northeastern Area,2002,2027.1,19,MA,R9
+Massachusetts,Northeastern Area,2015,1902.4,19,MA,R9
+Massachusetts,Northeastern Area,2014,5294.2,19,MA,R9
+Massachusetts,Northeastern Area,2001,1652.9,19,MA,R9
+Massachusetts,Northeastern Area,2016,9831.5,19,MA,R9
+Massachusetts,Northeastern Area,2008,41608.6,19,MA,R9
+Michigan,Northeastern Area,1999,5354,20,MI,R9
+Michigan,Northeastern Area,1997,18793.7,20,MI,R9
+Michigan,Northeastern Area,2001,64799.9,20,MI,R9
+Michigan,Northeastern Area,2007,70183.4,20,MI,R9
+Michigan,Northeastern Area,1998,24814.5,20,MI,R9
+Michigan,Northeastern Area,2005,451625.2,20,MI,R9
+Michigan,Northeastern Area,2e3,7695.9,20,MI,R9
+Michigan,Northeastern Area,2011,207551.5,20,MI,R9
+Michigan,Northeastern Area,2012,22073.5,20,MI,R9
+Michigan,Northeastern Area,2003,222219.5,20,MI,R9
+Michigan,Northeastern Area,2009,30223.3,20,MI,R9
+Michigan,Northeastern Area,2006,72380.9,20,MI,R9
+Michigan,Northeastern Area,2015,53681,20,MI,R9
+Michigan,Northeastern Area,2002,170776,20,MI,R9
+Michigan,Northeastern Area,2004,464401.4,20,MI,R9
+Michigan,Northeastern Area,2010,7757.3,20,MI,R9
+Michigan,Northeastern Area,2014,32910.6,20,MI,R9
+Michigan,Northeastern Area,2016,104336.2,20,MI,R9
+Michigan,Northeastern Area,2013,21716.5,20,MI,R9
+Michigan,Northeastern Area,2008,148330,20,MI,R9
+Minnesota,Northeastern Area,1997,31541.5,21,MN,R9
+Minnesota,Northeastern Area,2e3,25203.3,21,MN,R9
+Minnesota,Northeastern Area,2009,32068.1,21,MN,R9
+Minnesota,Northeastern Area,2016,82283,21,MN,R9
+Minnesota,Northeastern Area,2001,47387.9,21,MN,R9
+Minnesota,Northeastern Area,2002,40996.6,21,MN,R9
+Minnesota,Northeastern Area,1999,26719.9,21,MN,R9
+Minnesota,Northeastern Area,2013,64683.2,21,MN,R9
+Minnesota,Northeastern Area,1998,6080.1,21,MN,R9
+Minnesota,Northeastern Area,2003,36740.5,21,MN,R9
+Minnesota,Northeastern Area,2011,146236.5,21,MN,R9
+Minnesota,Northeastern Area,2010,26026.4,21,MN,R9
+Minnesota,Northeastern Area,2015,86119.1,21,MN,R9
+Minnesota,Northeastern Area,2004,54549.6,21,MN,R9
+Minnesota,Northeastern Area,2006,22507.9,21,MN,R9
+Minnesota,Northeastern Area,2012,133467.4,21,MN,R9
+Minnesota,Northeastern Area,2007,19682.3,21,MN,R9
+Minnesota,Northeastern Area,2005,19143.7,21,MN,R9
+Minnesota,Northeastern Area,2008,28517.7,21,MN,R9
+Minnesota,Northeastern Area,2014,51000.7,21,MN,R9
+Mississippi,Southern,1999,0,22,MS,R8
+Mississippi,Southern,2003,1122.4,22,MS,R8
+Mississippi,Southern,2011,60.5,22,MS,R8
+Mississippi,Southern,2012,1471.5,22,MS,R8
+Mississippi,Southern,2013,274.9,22,MS,R8
+Mississippi,Southern,2e3,0,22,MS,R8
+Mississippi,Southern,2005,21149.9,22,MS,R8
+Mississippi,Southern,2009,5.1,22,MS,R8
+Mississippi,Southern,2010,179.5,22,MS,R8
+Mississippi,Southern,1997,0,22,MS,R8
+Mississippi,Southern,2004,52.6,22,MS,R8
+Mississippi,Southern,2006,13.7,22,MS,R8
+Mississippi,Southern,2015,287.3,22,MS,R8
+Mississippi,Southern,2014,356,22,MS,R8
+Mississippi,Southern,2001,0,22,MS,R8
+Mississippi,Southern,2007,69.4,22,MS,R8
+Mississippi,Southern,2008,1.8,22,MS,R8
+Mississippi,Southern,2016,2051.9,22,MS,R8
+Mississippi,Southern,1998,0,22,MS,R8
+Mississippi,Southern,2002,545.2,22,MS,R8
+Missouri,Northeastern Area,1997,0,23,MO,R9
+Missouri,Northeastern Area,2e3,22683.1,23,MO,R9
+Missouri,Northeastern Area,1999,0,23,MO,R9
+Missouri,Northeastern Area,2002,67163.9,23,MO,R9
+Missouri,Northeastern Area,2001,0,23,MO,R9
+Missouri,Northeastern Area,2004,0,23,MO,R9
+Missouri,Northeastern Area,2003,206050.1,23,MO,R9
+Missouri,Northeastern Area,2010,6354.9,23,MO,R9
+Missouri,Northeastern Area,2005,13988.5,23,MO,R9
+Missouri,Northeastern Area,2013,57292.2,23,MO,R9
+Missouri,Northeastern Area,2006,23882.2,23,MO,R9
+Missouri,Northeastern Area,2007,65269.7,23,MO,R9
+Missouri,Northeastern Area,2012,7096.4,23,MO,R9
+Missouri,Northeastern Area,2014,38948.9,23,MO,R9
+Missouri,Northeastern Area,2011,813.5,23,MO,R9
+Missouri,Northeastern Area,2009,0,23,MO,R9
+Missouri,Northeastern Area,1998,41383.3,23,MO,R9
+Missouri,Northeastern Area,2015,15718.4,23,MO,R9
+Missouri,Northeastern Area,2008,187140,23,MO,R9
+Missouri,Northeastern Area,2016,317.1,23,MO,R9
+Montana,Northern,2009,3566603.3,24,MT,"NA"
+Montana,Northern,2003,469593.8,24,MT,"NA"
+Montana,Northern,2001,289348.8,24,MT,"NA"
+Montana,Northern,1998,186534.2,24,MT,"NA"
+Montana,Northern,2002,422147.8,24,MT,"NA"
+Montana,Northern,2e3,120341.5,24,MT,"NA"
+Montana,Northern,1997,94856.1,24,MT,"NA"
+Montana,Northern,2013,546046.2,24,MT,"NA"
+Montana,Northern,2011,992529.7,24,MT,"NA"
+Montana,Northern,2005,1124094,24,MT,"NA"
+Montana,Northern,2004,704571.5,24,MT,"NA"
+Montana,Northern,2015,191029.5,24,MT,"NA"
+Montana,Northern,2014,618895.2,24,MT,"NA"
+Montana,Northern,2012,638175.4,24,MT,"NA"
+Montana,Northern,2008,1831671.7,24,MT,"NA"
+Montana,Northern,1999,177631.8,24,MT,"NA"
+Montana,Northern,2007,837502.1,24,MT,"NA"
+Montana,Northern,2016,50533,24,MT,"NA"
+Montana,Northern,2006,922674.6,24,MT,"NA"
+Montana,Northern,2010,2093648.6,24,MT,"NA"
+Nebraska,Rocky Mountain,1999,0,25,NE,R2
+Nebraska,Rocky Mountain,2001,0,25,NE,R2
+Nebraska,Rocky Mountain,1997,0,25,NE,R2
+Nebraska,Rocky Mountain,2011,50815.1,25,NE,R2
+Nebraska,Rocky Mountain,2003,10870.4,25,NE,R2
+Nebraska,Rocky Mountain,2004,12560.4,25,NE,R2
+Nebraska,Rocky Mountain,2002,0,25,NE,R2
+Nebraska,Rocky Mountain,1998,510,25,NE,R2
+Nebraska,Rocky Mountain,2008,7236.3,25,NE,R2
+Nebraska,Rocky Mountain,2005,1671.7,25,NE,R2
+Nebraska,Rocky Mountain,2009,291,25,NE,R2
+Nebraska,Rocky Mountain,2013,320,25,NE,R2
+Nebraska,Rocky Mountain,2015,1150.4,25,NE,R2
+Nebraska,Rocky Mountain,2007,5548.6,25,NE,R2
+Nebraska,Rocky Mountain,2006,3982.1,25,NE,R2
+Nebraska,Rocky Mountain,2010,180.9,25,NE,R2
+Nebraska,Rocky Mountain,2e3,0,25,NE,R2
+Nebraska,Rocky Mountain,2014,8331.4,25,NE,R2
+Nebraska,Rocky Mountain,2012,310.7,25,NE,R2
+Nebraska,Rocky Mountain,2016,59.6,25,NE,R2
+Nevada,Intermountain,2005,74663.5,26,NV,"NA"
+Nevada,Intermountain,2003,425267.7,26,NV,"NA"
+Nevada,Intermountain,2004,799987.2,26,NV,"NA"
+Nevada,Intermountain,2002,73845.7,26,NV,"NA"
+Nevada,Intermountain,2001,9761.1,26,NV,"NA"
+Nevada,Pacific Southwest,2009,12,26,NV,"NA"
+Nevada,Intermountain,2007,14396.6,26,NV,"NA"
+Nevada,Intermountain,1997,2378.9,26,NV,"NA"
+Nevada,Intermountain,2e3,3542.7,26,NV,"NA"
+Nevada,Intermountain,1999,17791.3,26,NV,"NA"
+Nevada,Pacific Southwest,1999,0,26,NV,"NA"
+Nevada,Pacific Southwest,2001,0,26,NV,"NA"
+Nevada,Intermountain,2013,3777.9,26,NV,"NA"
+Nevada,Pacific Southwest,2014,3265.8,26,NV,"NA"
+Nevada,Pacific Southwest,2e3,0,26,NV,"NA"
+Nevada,Intermountain,2006,28529,26,NV,"NA"
+Nevada,Pacific Southwest,1997,0,26,NV,"NA"
+Nevada,Pacific Southwest,2013,10.6,26,NV,"NA"
+Nevada,Pacific Southwest,2005,1.1,26,NV,"NA"
+Nevada,Intermountain,2009,128634.6,26,NV,"NA"
+Nevada,Intermountain,1998,2387.2,26,NV,"NA"
+Nevada,Intermountain,2015,8823.9,26,NV,"NA"
+Nevada,Intermountain,2011,21079.3,26,NV,"NA"
+Nevada,Pacific Southwest,2004,5955.8,26,NV,"NA"
+Nevada,Pacific Southwest,2002,0,26,NV,"NA"
+Nevada,Pacific Southwest,2016,24.5,26,NV,"NA"
+Nevada,Pacific Southwest,2012,1.4,26,NV,"NA"
+Nevada,Pacific Southwest,2007,48,26,NV,"NA"
+Nevada,Intermountain,2008,31816.4,26,NV,"NA"
+Nevada,Pacific Southwest,2015,94.3,26,NV,"NA"
+Nevada,Pacific Southwest,2011,0,26,NV,"NA"
+Nevada,Intermountain,2012,7722.3,26,NV,"NA"
+Nevada,Pacific Southwest,2008,141.1,26,NV,"NA"
+Nevada,Pacific Southwest,1998,0,26,NV,"NA"
+Nevada,Intermountain,2014,26937.5,26,NV,"NA"
+Nevada,Pacific Southwest,2003,15367.9,26,NV,"NA"
+Nevada,Intermountain,2016,13526.9,26,NV,"NA"
+Nevada,Intermountain,2010,28503.2,26,NV,"NA"
+Nevada,Pacific Southwest,2006,9,26,NV,"NA"
+Nevada,Pacific Southwest,2010,16.8,26,NV,"NA"
+New Hampshire,Northeastern Area,1997,0,27,NH,R9
+New Hampshire,Northeastern Area,2001,17434.5,27,NH,R9
+New Hampshire,Northeastern Area,2010,714.9,27,NH,R9
+New Hampshire,Northeastern Area,2008,15345.3,27,NH,R9
+New Hampshire,Northeastern Area,1999,1108.2,27,NH,R9
+New Hampshire,Northeastern Area,1998,37354.2,27,NH,R9
+New Hampshire,Northeastern Area,2004,163682.7,27,NH,R9
+New Hampshire,Northeastern Area,2009,1280.4,27,NH,R9
+New Hampshire,Northeastern Area,2003,42081.2,27,NH,R9
+New Hampshire,Northeastern Area,2005,53715.9,27,NH,R9
+New Hampshire,Northeastern Area,2014,18113,27,NH,R9
+New Hampshire,Northeastern Area,2016,1201.9,27,NH,R9
+New Hampshire,Northeastern Area,2012,1724.2,27,NH,R9
+New Hampshire,Northeastern Area,2006,18925.5,27,NH,R9
+New Hampshire,Northeastern Area,2e3,13755.1,27,NH,R9
+New Hampshire,Northeastern Area,2013,4119,27,NH,R9
+New Hampshire,Northeastern Area,2011,800.4,27,NH,R9
+New Hampshire,Northeastern Area,2007,15265.3,27,NH,R9
+New Hampshire,Northeastern Area,2015,3829.1,27,NH,R9
+New Hampshire,Northeastern Area,2002,979.9,27,NH,R9
+New Jersey,Northeastern Area,2001,0,28,NJ,R9
+New Jersey,Northeastern Area,2003,2494,28,NJ,R9
+New Jersey,Northeastern Area,2005,1978.2,28,NJ,R9
+New Jersey,Northeastern Area,1999,0,28,NJ,R9
+New Jersey,Northeastern Area,2002,2032291.9,28,NJ,R9
+New Jersey,Northeastern Area,2006,0,28,NJ,R9
+New Jersey,Northeastern Area,2010,14276.1,28,NJ,R9
+New Jersey,Northeastern Area,2009,1799.2,28,NJ,R9
+New Jersey,Northeastern Area,2016,5534.9,28,NJ,R9
+New Jersey,Northeastern Area,2e3,0,28,NJ,R9
+New Jersey,Northeastern Area,2007,2410.8,28,NJ,R9
+New Jersey,Northeastern Area,1998,0,28,NJ,R9
+New Jersey,Northeastern Area,2015,5203.4,28,NJ,R9
+New Jersey,Northeastern Area,1997,0,28,NJ,R9
+New Jersey,Northeastern Area,2008,50828.1,28,NJ,R9
+New Jersey,Northeastern Area,2011,6786,28,NJ,R9
+New Jersey,Northeastern Area,2004,6711.5,28,NJ,R9
+New Jersey,Northeastern Area,2014,2262.4,28,NJ,R9
+New Jersey,Northeastern Area,2012,6254.6,28,NJ,R9
+New Jersey,Northeastern Area,2013,7080.5,28,NJ,R9
+New Mexico,Southwestern,2005,168159.8,29,NM,"NA"
+New Mexico,Southwestern,2011,170488,29,NM,"NA"
+New Mexico,Southwestern,2006,180012.8,29,NM,"NA"
+New Mexico,Southwestern,2012,175375.2,29,NM,"NA"
+New Mexico,Southwestern,1999,9400.4,29,NM,"NA"
+New Mexico,Southwestern,1997,16678,29,NM,"NA"
+New Mexico,Southwestern,2001,71888.4,29,NM,"NA"
+New Mexico,Southwestern,2003,910185.7,29,NM,"NA"
+New Mexico,Southwestern,2007,133802.2,29,NM,"NA"
+New Mexico,Southwestern,2009,71489.1,29,NM,"NA"
+New Mexico,Southwestern,2013,344584.5,29,NM,"NA"
+New Mexico,Southwestern,2015,127498.5,29,NM,"NA"
+New Mexico,Southwestern,2e3,46681.5,29,NM,"NA"
+New Mexico,Southwestern,1998,13162.7,29,NM,"NA"
+New Mexico,Southwestern,2002,177198.8,29,NM,"NA"
+New Mexico,Southwestern,2004,293208.3,29,NM,"NA"
+New Mexico,Southwestern,2008,120046.1,29,NM,"NA"
+New Mexico,Southwestern,2010,34884.5,29,NM,"NA"
+New Mexico,Southwestern,2014,202748.4,29,NM,"NA"
+New Mexico,Southwestern,2016,107683.6,29,NM,"NA"
+New York,Northeastern Area,2007,149821.9,30,NY,R9
+New York,Northeastern Area,2010,154773.2,30,NY,R9
+New York,Northeastern Area,2009,125794,30,NY,R9
+New York,Northeastern Area,2003,11704.7,30,NY,R9
+New York,Northeastern Area,2015,19611.2,30,NY,R9
+New York,Northeastern Area,2014,20243.1,30,NY,R9
+New York,Northeastern Area,2012,105721.8,30,NY,R9
+New York,Northeastern Area,2016,107559.7,30,NY,R9
+New York,Northeastern Area,1997,456.1,30,NY,R9
+New York,Northeastern Area,1999,0,30,NY,R9
+New York,Northeastern Area,2013,15124.5,30,NY,R9
+New York,Northeastern Area,2005,116982.5,30,NY,R9
+New York,Northeastern Area,2011,69301.4,30,NY,R9
+New York,Northeastern Area,2004,27517.4,30,NY,R9
+New York,Northeastern Area,2002,14067.8,30,NY,R9
+New York,Northeastern Area,1998,0.8,30,NY,R9
+New York,Northeastern Area,2e3,13684.6,30,NY,R9
+New York,Northeastern Area,2001,2512.2,30,NY,R9
+New York,Northeastern Area,2006,11888.2,30,NY,R9
+New York,Northeastern Area,2008,127669.6,30,NY,R9
+North Carolina,Southern,2009,9122.3,31,NC,R8
+North Carolina,Southern,2011,2168.9,31,NC,R8
+North Carolina,Southern,2012,10672.6,31,NC,R8
+North Carolina,Southern,2005,7215.7,31,NC,R8
+North Carolina,Southern,2006,5239,31,NC,R8
+North Carolina,Southern,2010,5232.9,31,NC,R8
+North Carolina,Southern,2007,19980,31,NC,R8
+North Carolina,Southern,1997,0,31,NC,R8
+North Carolina,Southern,1999,0,31,NC,R8
+North Carolina,Southern,2003,1120.2,31,NC,R8
+North Carolina,Southern,2004,551,31,NC,R8
+North Carolina,Southern,2015,8453.4,31,NC,R8
+North Carolina,Southern,1998,0,31,NC,R8
+North Carolina,Southern,2e3,0,31,NC,R8
+North Carolina,Southern,2002,26589.6,31,NC,R8
+North Carolina,Southern,2008,585.5,31,NC,R8
+North Carolina,Southern,2013,466.6,31,NC,R8
+North Carolina,Southern,2001,0,31,NC,R8
+North Carolina,Southern,2016,411.8,31,NC,R8
+North Carolina,Southern,2014,9462.3,31,NC,R8
+North Dakota,Northern,2007,0,32,ND,R2
+North Dakota,Northern,2008,0,32,ND,R2
+North Dakota,Northern,2009,0,32,ND,R2
+North Dakota,Northern,1998,0,32,ND,R2
+North Dakota,Northern,1997,0,32,ND,R2
+North Dakota,Northern,2015,0,32,ND,R2
+North Dakota,Northern,2e3,0,32,ND,R2
+North Dakota,Northern,2013,0,32,ND,R2
+North Dakota,Northern,2012,0,32,ND,R2
+North Dakota,Northern,2004,0,32,ND,R2
+North Dakota,Northern,2001,0,32,ND,R2
+North Dakota,Northern,2003,17.5,32,ND,R2
+North Dakota,Northern,2005,0,32,ND,R2
+North Dakota,Northern,2011,1533.2,32,ND,R2
+North Dakota,Northern,2002,0,32,ND,R2
+North Dakota,Northern,1999,0,32,ND,R2
+North Dakota,Northern,2016,4,32,ND,R2
+North Dakota,Northern,2006,23.1,32,ND,R2
+North Dakota,Northern,2010,0,32,ND,R2
+North Dakota,Northern,2014,36,32,ND,R2
+Ohio,Northeastern Area,2014,12899.9,33,OH,R9
+Ohio,Northeastern Area,2005,3815,33,OH,R9
+Ohio,Northeastern Area,2006,19504.8,33,OH,R9
+Ohio,Northeastern Area,1999,0,33,OH,R9
+Ohio,Northeastern Area,1998,0,33,OH,R9
+Ohio,Northeastern Area,1997,0,33,OH,R9
+Ohio,Northeastern Area,2001,1053.9,33,OH,R9
+Ohio,Northeastern Area,2010,38032.6,33,OH,R9
+Ohio,Northeastern Area,2007,2705.5,33,OH,R9
+Ohio,Northeastern Area,2009,21196.2,33,OH,R9
+Ohio,Northeastern Area,2008,2765.5,33,OH,R9
+Ohio,Northeastern Area,2003,503.8,33,OH,R9
+Ohio,Northeastern Area,2004,854.3,33,OH,R9
+Ohio,Northeastern Area,2e3,1132.4,33,OH,R9
+Ohio,Northeastern Area,2011,33219.2,33,OH,R9
+Ohio,Northeastern Area,2016,7543,33,OH,R9
+Ohio,Northeastern Area,2015,11134.3,33,OH,R9
+Ohio,Northeastern Area,2012,16664,33,OH,R9
+Ohio,Northeastern Area,2002,0,33,OH,R9
+Ohio,Northeastern Area,2013,9044.7,33,OH,R9
+Oklahoma,Southern,1999,0,34,OK,R8
+Oklahoma,Southern,2007,0,34,OK,R8
+Oklahoma,Southern,1997,0,34,OK,R8
+Oklahoma,Southern,2e3,0,34,OK,R8
+Oklahoma,Southern,2005,0,34,OK,R8
+Oklahoma,Southern,2009,0,34,OK,R8
+Oklahoma,Southern,2010,0,34,OK,R8
+Oklahoma,Southern,2001,0,34,OK,R8
+Oklahoma,Southern,2015,0,34,OK,R8
+Oklahoma,Southern,2006,0,34,OK,R8
+Oklahoma,Southern,2012,5.5,34,OK,R8
+Oklahoma,Southern,1998,0,34,OK,R8
+Oklahoma,Southern,2008,204.2,34,OK,R8
+Oklahoma,Southern,2011,0,34,OK,R8
+Oklahoma,Southern,2014,40.7,34,OK,R8
+Oklahoma,Southern,2003,16670.3,34,OK,R8
+Oklahoma,Southern,2016,230.7,34,OK,R8
+Oklahoma,Southern,2002,2751.3,34,OK,R8
+Oklahoma,Southern,2013,0,34,OK,R8
+Oklahoma,Southern,2004,4,34,OK,R8
+Oregon,Pacific Southwest,1997,203.5,35,OR,"NA"
+Oregon,Pacific Southwest,2009,303.8,35,OR,"NA"
+Oregon,Pacific Southwest,1999,15.8,35,OR,"NA"
+Oregon,Pacific Southwest,2007,145.4,35,OR,"NA"
+Oregon,Pacific Southwest,2008,223.9,35,OR,"NA"
+Oregon,Pacific Northwest,2013,388444.8,35,OR,"NA"
+Oregon,Pacific Southwest,2015,479,35,OR,"NA"
+Oregon,Pacific Southwest,2003,4357.9,35,OR,"NA"
+Oregon,Pacific Southwest,2005,325.4,35,OR,"NA"
+Oregon,Pacific Southwest,1998,68.8,35,OR,"NA"
+Oregon,Pacific Southwest,2013,40,35,OR,"NA"
+Oregon,Pacific Southwest,2011,157.7,35,OR,"NA"
+Oregon,Pacific Northwest,2015,542346.6,35,OR,"NA"
+Oregon,Pacific Southwest,2010,520.4,35,OR,"NA"
+Oregon,Pacific Northwest,1999,142620.3,35,OR,"NA"
+Oregon,Pacific Southwest,2001,17.4,35,OR,"NA"
+Oregon,Pacific Southwest,2004,1329.2,35,OR,"NA"
+Oregon,Pacific Northwest,2003,623421.3,35,OR,"NA"
+Oregon,Pacific Southwest,2e3,59.3,35,OR,"NA"
+Oregon,Pacific Northwest,2009,501221.9,35,OR,"NA"
+Oregon,Pacific Southwest,2016,499.8,35,OR,"NA"
+Oregon,Pacific Southwest,2006,21.7,35,OR,"NA"
+Oregon,Pacific Northwest,2014,453168,35,OR,"NA"
+Oregon,Pacific Southwest,2014,890.1,35,OR,"NA"
+Oregon,Pacific Northwest,2011,353641.8,35,OR,"NA"
+Oregon,Pacific Southwest,2012,115.9,35,OR,"NA"
+Oregon,Pacific Northwest,2001,155439.4,35,OR,"NA"
+Oregon,Pacific Northwest,2010,572507.7,35,OR,"NA"
+Oregon,Pacific Northwest,2007,678005.4,35,OR,"NA"
+Oregon,Pacific Northwest,2005,515584.7,35,OR,"NA"
+Oregon,Pacific Northwest,2016,582329.3,35,OR,"NA"
+Oregon,Pacific Northwest,2e3,142835.6,35,OR,"NA"
+Oregon,Pacific Southwest,2002,428.1,35,OR,"NA"
+Oregon,Pacific Northwest,2012,294073.6,35,OR,"NA"
+Oregon,Pacific Northwest,2006,566350.5,35,OR,"NA"
+Oregon,Pacific Northwest,2004,714152.7,35,OR,"NA"
+Oregon,Pacific Northwest,2002,377701.8,35,OR,"NA"
+Oregon,Pacific Northwest,1997,111433.5,35,OR,"NA"
+Oregon,Pacific Northwest,1998,98283,35,OR,"NA"
+Oregon,Pacific Northwest,2008,683128.5,35,OR,"NA"
+Pennsylvania,Northeastern Area,2e3,53.1,36,PA,R9
+Pennsylvania,Northeastern Area,1997,0,36,PA,R9
+Pennsylvania,Northeastern Area,1999,2397.8,36,PA,R9
+Pennsylvania,Northeastern Area,2015,12985.3,36,PA,R9
+Pennsylvania,Northeastern Area,2011,20980.3,36,PA,R9
+Pennsylvania,Northeastern Area,2006,0,36,PA,R9
+Pennsylvania,Northeastern Area,2009,113019.5,36,PA,R9
+Pennsylvania,Northeastern Area,2005,16433.7,36,PA,R9
+Pennsylvania,Northeastern Area,1998,0,36,PA,R9
+Pennsylvania,Northeastern Area,2001,0,36,PA,R9
+Pennsylvania,Northeastern Area,2016,21637.6,36,PA,R9
+Pennsylvania,Northeastern Area,2010,31714.7,36,PA,R9
+Pennsylvania,Northeastern Area,2014,0.7,36,PA,R9
+Pennsylvania,Northeastern Area,2002,0.5,36,PA,R9
+Pennsylvania,Northeastern Area,2013,260938.4,36,PA,R9
+Pennsylvania,Northeastern Area,2003,59720.3,36,PA,R9
+Pennsylvania,Northeastern Area,2007,0,36,PA,R9
+Pennsylvania,Northeastern Area,2004,306,36,PA,R9
+Pennsylvania,Northeastern Area,2012,12550.5,36,PA,R9
+Pennsylvania,Northeastern Area,2008,38360.7,36,PA,R9
+Rhode Island,Northeastern Area,2007,852.8,37,RI,R9
+Rhode Island,Northeastern Area,2006,12.6,37,RI,R9
+Rhode Island,Northeastern Area,2003,15.8,37,RI,R9
+Rhode Island,Northeastern Area,1997,0,37,RI,R9
+Rhode Island,Northeastern Area,2015,0,37,RI,R9
+Rhode Island,Northeastern Area,2004,33.1,37,RI,R9
+Rhode Island,Northeastern Area,1998,0,37,RI,R9
+Rhode Island,Northeastern Area,2009,222.4,37,RI,R9
+Rhode Island,Northeastern Area,2012,0,37,RI,R9
+Rhode Island,Northeastern Area,2001,0,37,RI,R9
+Rhode Island,Northeastern Area,2011,0,37,RI,R9
+Rhode Island,Northeastern Area,2008,0,37,RI,R9
+Rhode Island,Northeastern Area,1999,0,37,RI,R9
+Rhode Island,Northeastern Area,2014,86.4,37,RI,R9
+Rhode Island,Northeastern Area,2013,96.2,37,RI,R9
+Rhode Island,Northeastern Area,2005,0,37,RI,R9
+Rhode Island,Northeastern Area,2e3,0,37,RI,R9
+Rhode Island,Northeastern Area,2010,3127.2,37,RI,R9
+Rhode Island,Northeastern Area,2016,332.2,37,RI,R9
+Rhode Island,Northeastern Area,2002,0,37,RI,R9
+South Carolina,Southern,2011,0,38,SC,R8
+South Carolina,Southern,2007,926,38,SC,R8
+South Carolina,Southern,2008,0.5,38,SC,R8
+South Carolina,Southern,2004,180,38,SC,R8
+South Carolina,Southern,1999,61039.8,38,SC,R8
+South Carolina,Southern,2005,118.1,38,SC,R8
+South Carolina,Southern,1997,0,38,SC,R8
+South Carolina,Southern,1998,0,38,SC,R8
+South Carolina,Southern,2012,11.8,38,SC,R8
+South Carolina,Southern,2003,224,38,SC,R8
+South Carolina,Southern,2001,0,38,SC,R8
+South Carolina,Southern,2015,0,38,SC,R8
+South Carolina,Southern,2013,0,38,SC,R8
+South Carolina,Southern,2006,42.1,38,SC,R8
+South Carolina,Southern,2010,111.7,38,SC,R8
+South Carolina,Southern,2002,4,38,SC,R8
+South Carolina,Southern,2e3,0,38,SC,R8
+South Carolina,Southern,2009,23.6,38,SC,R8
+South Carolina,Southern,2016,0,38,SC,R8
+South Carolina,Southern,2014,1562.2,38,SC,R8
+South Dakota,Rocky Mountain,2013,32629.8,39,SD,R2
+South Dakota,Rocky Mountain,2014,15199.7,39,SD,R2
+South Dakota,Northern,2015,0,39,SD,R2
+South Dakota,Rocky Mountain,2011,66173.6,39,SD,R2
+South Dakota,Northern,2008,247.5,39,SD,R2
+South Dakota,Rocky Mountain,2016,2230.4,39,SD,R2
+South Dakota,Rocky Mountain,2015,15134.4,39,SD,R2
+South Dakota,Northern,2013,109.6,39,SD,R2
+South Dakota,Northern,2009,22,39,SD,R2
+South Dakota,Rocky Mountain,2007,28914.2,39,SD,R2
+South Dakota,Northern,2003,258.8,39,SD,R2
+South Dakota,Rocky Mountain,2012,29878.8,39,SD,R2
+South Dakota,Rocky Mountain,2010,44620.9,39,SD,R2
+South Dakota,Northern,2007,85.7,39,SD,R2
+South Dakota,Northern,2004,0,39,SD,R2
+South Dakota,Northern,2010,0,39,SD,R2
+South Dakota,Northern,2006,147.7,39,SD,R2
+South Dakota,Rocky Mountain,2009,23429.4,39,SD,R2
+South Dakota,Northern,2005,199.8,39,SD,R2
+South Dakota,Rocky Mountain,2004,101382.8,39,SD,R2
+South Dakota,Northern,2014,22,39,SD,R2
+South Dakota,Northern,2011,63.7,39,SD,R2
+South Dakota,Rocky Mountain,2008,26992.9,39,SD,R2
+South Dakota,Northern,2016,44,39,SD,R2
+South Dakota,Northern,1997,28.4,39,SD,R2
+South Dakota,Rocky Mountain,2002,117470.7,39,SD,R2
+South Dakota,Northern,1998,0,39,SD,R2
+South Dakota,Rocky Mountain,2005,25186.5,39,SD,R2
+South Dakota,Rocky Mountain,1997,9509.3,39,SD,R2
+South Dakota,Northern,2012,0,39,SD,R2
+South Dakota,Rocky Mountain,1998,13714.5,39,SD,R2
+South Dakota,Rocky Mountain,1999,19381.5,39,SD,R2
+South Dakota,Rocky Mountain,2003,240033,39,SD,R2
+South Dakota,Rocky Mountain,2006,44147.7,39,SD,R2
+South Dakota,Northern,2001,408.8,39,SD,R2
+South Dakota,Northern,1999,0,39,SD,R2
+South Dakota,Rocky Mountain,2001,139550,39,SD,R2
+South Dakota,Rocky Mountain,2e3,13591.6,39,SD,R2
+South Dakota,Northern,2e3,0,39,SD,R2
+South Dakota,Northern,2002,0,39,SD,R2
+Tennessee,Southern,1999,0,40,TN,R8
+Tennessee,Southern,2003,257.5,40,TN,R8
+Tennessee,Southern,2e3,0,40,TN,R8
+Tennessee,Southern,2009,364.5,40,TN,R8
+Tennessee,Southern,1997,0,40,TN,R8
+Tennessee,Southern,2001,0,40,TN,R8
+Tennessee,Southern,2013,1817.7,40,TN,R8
+Tennessee,Southern,2010,221.4,40,TN,R8
+Tennessee,Southern,2004,46.4,40,TN,R8
+Tennessee,Southern,2007,913.1,40,TN,R8
+Tennessee,Southern,2002,22069.2,40,TN,R8
+Tennessee,Southern,2011,1406.4,40,TN,R8
+Tennessee,Southern,2005,265.5,40,TN,R8
+Tennessee,Southern,1998,0,40,TN,R8
+Tennessee,Southern,2015,0,40,TN,R8
+Tennessee,Southern,2014,3719.3,40,TN,R8
+Tennessee,Southern,2006,46.2,40,TN,R8
+Tennessee,Southern,2008,0.1,40,TN,R8
+Tennessee,Southern,2016,5123.2,40,TN,R8
+Tennessee,Southern,2012,0,40,TN,R8
+Texas,Southern,1997,0,41,TX,R8
+Texas,Southern,2016,0,41,TX,R8
+Texas,Southern,2001,0,41,TX,R8
+Texas,Southern,1999,0,41,TX,R8
+Texas,Southern,2015,750.3,41,TX,R8
+Texas,Southern,2007,0,41,TX,R8
+Texas,Southern,2002,6470.9,41,TX,R8
+Texas,Southern,2e3,0,41,TX,R8
+Texas,Southern,2013,80.3,41,TX,R8
+Texas,Southern,2008,0,41,TX,R8
+Texas,Southern,2003,62.5,41,TX,R8
+Texas,Southern,2005,13012,41,TX,R8
+Texas,Southern,2012,20129,41,TX,R8
+Texas,Southern,2014,2.7,41,TX,R8
+Texas,Southern,1998,0,41,TX,R8
+Texas,Southern,2006,1019.4,41,TX,R8
+Texas,Southern,2009,0.8,41,TX,R8
+Texas,Southern,2011,21.7,41,TX,R8
+Texas,Southern,2010,34.8,41,TX,R8
+Texas,Southern,2004,5.9,41,TX,R8
+Utah,Intermountain,1997,224240.2,42,UT,"NA"
+Utah,Intermountain,1999,66931.8,42,UT,"NA"
+Utah,Intermountain,2003,364338,42,UT,"NA"
+Utah,Intermountain,2002,105374.4,42,UT,"NA"
+Utah,Intermountain,2e3,59234.6,42,UT,"NA"
+Utah,Intermountain,2001,141123.6,42,UT,"NA"
+Utah,Intermountain,2007,435109.5,42,UT,"NA"
+Utah,Intermountain,2005,335367.9,42,UT,"NA"
+Utah,Intermountain,2009,271024.8,42,UT,"NA"
+Utah,Intermountain,1998,95675.2,42,UT,"NA"
+Utah,Intermountain,2015,146995.9,42,UT,"NA"
+Utah,Intermountain,2012,56938.3,42,UT,"NA"
+Utah,Intermountain,2004,581502.6,42,UT,"NA"
+Utah,Intermountain,2011,98116.5,42,UT,"NA"
+Utah,Intermountain,2010,279899.2,42,UT,"NA"
+Utah,Intermountain,2013,100309.3,42,UT,"NA"
+Utah,Intermountain,2006,122677.9,42,UT,"NA"
+Utah,Intermountain,2008,358332,42,UT,"NA"
+Utah,Intermountain,2014,147570,42,UT,"NA"
+Utah,Intermountain,2016,149323.8,42,UT,"NA"
+Vermont,Northeastern Area,1998,78656.8,43,VT,R9
+Vermont,Northeastern Area,2013,15634.2,43,VT,R9
+Vermont,Northeastern Area,2008,4089.4,43,VT,R9
+Vermont,Northeastern Area,2002,7144.7,43,VT,R9
+Vermont,Northeastern Area,2001,1345.5,43,VT,R9
+Vermont,Northeastern Area,2014,5949.3,43,VT,R9
+Vermont,Northeastern Area,2015,7179.5,43,VT,R9
+Vermont,Northeastern Area,1997,2303.9,43,VT,R9
+Vermont,Northeastern Area,2004,28407.7,43,VT,R9
+Vermont,Northeastern Area,1999,1160.4,43,VT,R9
+Vermont,Northeastern Area,2016,6136.4,43,VT,R9
+Vermont,Northeastern Area,2010,10852.1,43,VT,R9
+Vermont,Northeastern Area,2007,46610.8,43,VT,R9
+Vermont,Northeastern Area,2003,16329.3,43,VT,R9
+Vermont,Northeastern Area,2e3,905,43,VT,R9
+Vermont,Northeastern Area,2012,6295.4,43,VT,R9
+Vermont,Northeastern Area,2006,9460,43,VT,R9
+Vermont,Northeastern Area,2005,35105.6,43,VT,R9
+Vermont,Northeastern Area,2009,23334.5,43,VT,R9
+Vermont,Northeastern Area,2011,7074.7,43,VT,R9
+Virginia,Southern,2013,86.9,44,VA,R8
+Virginia,Southern,2015,92,44,VA,R8
+Virginia,Southern,2014,1636.1,44,VA,R8
+Virginia,Southern,2016,6643.8,44,VA,R8
+Virginia,Southern,2009,672.7,44,VA,R8
+Virginia,Southern,2007,1529.6,44,VA,R8
+Virginia,Southern,2001,20.7,44,VA,R8
+Virginia,Southern,1997,834.8,44,VA,R8
+Virginia,Southern,2010,26372.2,44,VA,R8
+Virginia,Southern,2008,185.3,44,VA,R8
+Virginia,Southern,2002,5695.7,44,VA,R8
+Virginia,Southern,1998,0,44,VA,R8
+Virginia,Southern,1999,0,44,VA,R8
+Virginia,Southern,2011,324.3,44,VA,R8
+Virginia,Southern,2005,672,44,VA,R8
+Virginia,Southern,2003,4,44,VA,R8
+Virginia,Southern,2e3,1590.8,44,VA,R8
+Virginia,Southern,2012,308.3,44,VA,R8
+Virginia,Southern,2006,834.5,44,VA,R8
+Virginia,Southern,2004,3125.3,44,VA,R8
+Washington,Pacific Northwest,2014,380160.3,45,WA,"NA"
+Washington,Pacific Northwest,2015,228928.7,45,WA,"NA"
+Washington,Pacific Northwest,2007,741798.6,45,WA,"NA"
+Washington,Pacific Northwest,2016,310455.3,45,WA,"NA"
+Washington,Pacific Northwest,2002,448502,45,WA,"NA"
+Washington,Pacific Northwest,2010,539549.5,45,WA,"NA"
+Washington,Northern,2008,0,45,WA,"NA"
+Washington,Northern,2014,0,45,WA,"NA"
+Washington,Pacific Northwest,2008,811182.3,45,WA,"NA"
+Washington,Pacific Northwest,2001,334440.2,45,WA,"NA"
+Washington,Pacific Northwest,2003,905334.3,45,WA,"NA"
+Washington,Pacific Northwest,2009,1269945.6,45,WA,"NA"
+Washington,Pacific Northwest,2013,344277.7,45,WA,"NA"
+Washington,Northern,2e3,0,45,WA,"NA"
+Washington,Northern,2003,0,45,WA,"NA"
+Washington,Pacific Northwest,1998,101765.9,45,WA,"NA"
+Washington,Pacific Northwest,2004,870862.9,45,WA,"NA"
+Washington,Northern,2009,0,45,WA,"NA"
+Washington,Pacific Northwest,2005,1089207.5,45,WA,"NA"
+Washington,Pacific Northwest,1999,163212.2,45,WA,"NA"
+Washington,Northern,2016,3425.7,45,WA,"NA"
+Washington,Pacific Northwest,2011,378219,45,WA,"NA"
+Washington,Northern,2011,0,45,WA,"NA"
+Washington,Northern,2004,0,45,WA,"NA"
+Washington,Northern,2007,0,45,WA,"NA"
+Washington,Northern,2013,0,45,WA,"NA"
+Washington,Pacific Northwest,2006,656799.1,45,WA,"NA"
+Washington,Northern,2001,0,45,WA,"NA"
+Washington,Northern,2002,0,45,WA,"NA"
+Washington,Pacific Northwest,2012,484282.2,45,WA,"NA"
+Washington,Northern,2010,0,45,WA,"NA"
+Washington,Pacific Northwest,2e3,180541.6,45,WA,"NA"
+Washington,Northern,1997,0,45,WA,"NA"
+Washington,Northern,2006,0,45,WA,"NA"
+Washington,Northern,2015,2868.7,45,WA,"NA"
+Washington,Northern,2012,0,45,WA,"NA"
+Washington,Pacific Northwest,1997,141931.8,45,WA,"NA"
+Washington,Northern,1998,0,45,WA,"NA"
+Washington,Northern,2005,0,45,WA,"NA"
+Washington,Northern,1999,0,45,WA,"NA"
+West Virginia,Southern,2003,0,46,WV,R9
+West Virginia,Southern,2005,0,46,WV,R9
+West Virginia,Northeastern Area,2007,0,46,WV,R9
+West Virginia,Southern,2e3,0,46,WV,R9
+West Virginia,Northeastern Area,1998,0,46,WV,R9
+West Virginia,Northeastern Area,1997,868986.2,46,WV,R9
+West Virginia,Northeastern Area,1999,0,46,WV,R9
+West Virginia,Southern,1999,0,46,WV,R9
+West Virginia,Northeastern Area,2013,0,46,WV,R9
+West Virginia,Southern,2010,0,46,WV,R9
+West Virginia,Northeastern Area,2001,0,46,WV,R9
+West Virginia,Southern,2001,0,46,WV,R9
+West Virginia,Southern,2014,0,46,WV,R9
+West Virginia,Southern,2004,0,46,WV,R9
+West Virginia,Southern,1998,0,46,WV,R9
+West Virginia,Northeastern Area,2002,11632,46,WV,R9
+West Virginia,Southern,1997,0,46,WV,R9
+West Virginia,Southern,2006,0,46,WV,R9
+West Virginia,Northeastern Area,2004,484.7,46,WV,R9
+West Virginia,Northeastern Area,2003,71284.7,46,WV,R9
+West Virginia,Northeastern Area,2015,530448.8,46,WV,R9
+West Virginia,Northeastern Area,2009,8410.1,46,WV,R9
+West Virginia,Northeastern Area,2008,331.9,46,WV,R9
+West Virginia,Northeastern Area,2005,48,46,WV,R9
+West Virginia,Southern,2002,0,46,WV,R9
+West Virginia,Southern,2007,0,46,WV,R9
+West Virginia,Southern,2012,0,46,WV,R9
+West Virginia,Southern,2016,527.9,46,WV,R9
+West Virginia,Southern,2008,0,46,WV,R9
+West Virginia,Northeastern Area,2e3,295935.2,46,WV,R9
+West Virginia,Northeastern Area,2014,21807.3,46,WV,R9
+West Virginia,Northeastern Area,2006,75.3,46,WV,R9
+West Virginia,Southern,2009,0,46,WV,R9
+West Virginia,Northeastern Area,2011,0,46,WV,R9
+West Virginia,Southern,2015,0,46,WV,R9
+West Virginia,Southern,2011,0,46,WV,R9
+West Virginia,Northeastern Area,2016,18542.7,46,WV,R9
+West Virginia,Northeastern Area,2012,304.4,46,WV,R9
+West Virginia,Northeastern Area,2010,0,46,WV,R9
+West Virginia,Southern,2013,0,46,WV,R9
+Wisconsin,Northeastern Area,2001,1967.5,47,WI,R9
+Wisconsin,Northeastern Area,1997,0,47,WI,R9
+Wisconsin,Northeastern Area,1999,0,47,WI,R9
+Wisconsin,Northeastern Area,2003,12208.5,47,WI,R9
+Wisconsin,Northeastern Area,2002,0,47,WI,R9
+Wisconsin,Northeastern Area,1998,299271.9,47,WI,R9
+Wisconsin,Northeastern Area,2007,2498.7,47,WI,R9
+Wisconsin,Northeastern Area,2009,706255.8,47,WI,R9
+Wisconsin,Northeastern Area,2015,72323.3,47,WI,R9
+Wisconsin,Northeastern Area,2005,1770.6,47,WI,R9
+Wisconsin,Northeastern Area,2011,176455.2,47,WI,R9
+Wisconsin,Northeastern Area,2012,92237.2,47,WI,R9
+Wisconsin,Northeastern Area,2008,944330,47,WI,R9
+Wisconsin,Northeastern Area,2004,0,47,WI,R9
+Wisconsin,Northeastern Area,2006,718,47,WI,R9
+Wisconsin,Northeastern Area,2014,87686,47,WI,R9
+Wisconsin,Northeastern Area,2e3,0,47,WI,R9
+Wisconsin,Northeastern Area,2016,505023.3,47,WI,R9
+Wisconsin,Northeastern Area,2013,200810.4,47,WI,R9
+Wisconsin,Northeastern Area,2010,518.2,47,WI,R9
+Wyoming,Northern,2008,35527.7,48,WY,"NA"
+Wyoming,Northern,2006,5891.5,48,WY,"NA"
+Wyoming,Intermountain,1998,5702,48,WY,"NA"
+Wyoming,Intermountain,2002,37021,48,WY,"NA"
+Wyoming,Intermountain,2001,14132.5,48,WY,"NA"
+Wyoming,Northern,2004,38.1,48,WY,"NA"
+Wyoming,Intermountain,2007,485685.7,48,WY,"NA"
+Wyoming,Northern,2005,33417.1,48,WY,"NA"
+Wyoming,Northern,2002,23316.7,48,WY,"NA"
+Wyoming,Northern,2009,53219.6,48,WY,"NA"
+Wyoming,Rocky Mountain,2010,691940.5,48,WY,"NA"
+Wyoming,Northern,1998,0.4,48,WY,"NA"
+Wyoming,Intermountain,2e3,12099.8,48,WY,"NA"
+Wyoming,Intermountain,1999,11454.1,48,WY,"NA"
+Wyoming,Northern,2007,53875.6,48,WY,"NA"
+Wyoming,Rocky Mountain,2006,296352.9,48,WY,"NA"
+Wyoming,Northern,2e3,3.5,48,WY,"NA"
+Wyoming,Northern,2016,621.6,48,WY,"NA"
+Wyoming,Northern,2014,960,48,WY,"NA"
+Wyoming,Northern,2003,19553.6,48,WY,"NA"
+Wyoming,Intermountain,2008,442111.6,48,WY,"NA"
+Wyoming,Intermountain,2005,258610.4,48,WY,"NA"
+Wyoming,Northern,2015,482.3,48,WY,"NA"
+Wyoming,Northern,2011,13459.6,48,WY,"NA"
+Wyoming,Intermountain,2013,44754.1,48,WY,"NA"
+Wyoming,Rocky Mountain,2012,147333.4,48,WY,"NA"
+Wyoming,Northern,2010,17633.8,48,WY,"NA"
+Wyoming,Intermountain,1997,65985.5,48,WY,"NA"
+Wyoming,Intermountain,2014,75826.8,48,WY,"NA"
+Wyoming,Rocky Mountain,2011,658809.1,48,WY,"NA"
+Wyoming,Northern,2001,237.4,48,WY,"NA"
+Wyoming,Intermountain,2004,329794.7,48,WY,"NA"
+Wyoming,Rocky Mountain,1997,39919.5,48,WY,"NA"
+Wyoming,Intermountain,2015,56659,48,WY,"NA"
+Wyoming,Intermountain,2009,559952.4,48,WY,"NA"
+Wyoming,Intermountain,2003,118430.6,48,WY,"NA"
+Wyoming,Northern,2013,1706.8,48,WY,"NA"
+Wyoming,Rocky Mountain,2005,453488.5,48,WY,"NA"
+Wyoming,Rocky Mountain,2004,338669.4,48,WY,"NA"
+Wyoming,Rocky Mountain,2016,24671.2,48,WY,"NA"
+Wyoming,Rocky Mountain,2015,72075.8,48,WY,"NA"
+Wyoming,Northern,2012,0.5,48,WY,"NA"
+Wyoming,Northern,1999,1.1,48,WY,"NA"
+Wyoming,Intermountain,2006,192767,48,WY,"NA"
+Wyoming,Rocky Mountain,2008,740645,48,WY,"NA"
+Wyoming,Rocky Mountain,2001,215180.3,48,WY,"NA"
+Wyoming,Rocky Mountain,2013,98172.1,48,WY,"NA"
+Wyoming,Intermountain,2011,128175.7,48,WY,"NA"
+Wyoming,Rocky Mountain,2007,531320.8,48,WY,"NA"
+Wyoming,Rocky Mountain,2e3,83208.4,48,WY,"NA"
+Wyoming,Intermountain,2016,39692.6,48,WY,"NA"
+Wyoming,Rocky Mountain,2009,660251,48,WY,"NA"
+Wyoming,Intermountain,2012,58202.7,48,WY,"NA"
+Wyoming,Intermountain,2010,305781.5,48,WY,"NA"
+Wyoming,Rocky Mountain,2002,212166.2,48,WY,"NA"
+Wyoming,Rocky Mountain,2014,169890.1,48,WY,"NA"
+Wyoming,Rocky Mountain,1998,9638,48,WY,"NA"
+Wyoming,Northern,1997,14847.5,48,WY,"NA"
+Wyoming,Rocky Mountain,1999,46073.2,48,WY,"NA"
+Wyoming,Rocky Mountain,2003,153420.4,48,WY,"NA"
