@@ -1,0 +1,38 @@
+---
+title: "White Oak Population Forecast"
+date: 2018-03-12
+categories: ["Data Science"]
+tags: ["Forecasting", "Production", "Bourbon"]
+draft: false
+---
+
+***Created by B-F Data Science.***
+
+### Purpose
+
+The production team has requested a forecast of the White Oak population in order to better understand any short and/or long term risk associated with the population growth and mortality. A previous consultant had provided a forecast that had some fairly significant errors, and our goal was to enhance the consultant's work so that the resulting forecast is up-to-date and accurate.
+
+### Result
+
+The result of this project is an interactive dashboard that allows the user to toggle with various inputs for Urbanization, BF Demand, and Removal. The forecasts will then adjust to accomodate any changes to the fields. The 2014 population can be viewed on an interactive heat map, that will then provide the same forecast at an individual state level.
+
+### Next Steps
+
+Along with enhancing the accessibility of the forecast, the Data Science team is also working on an enhancement to the modeling methodology, which will hopefully increase the accuracy of the prediction itself.
+
+> To view the dashboard, <a href="http://arsconp.b-f.net:3939/white-oak-forecast/" target="_blank">click here</a>. 
+
+### Data
+
+The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1991 through 2014.
+
+### Method
+##### Forecast
+In order to forecast the White Oak population, we first calculated the yearly percent of inventory for the growth, removal, and mortality volumes. We then built a simple linear regression model to describe the trend of the growth, removal, and mortality, individually. Using the slope coefficient and an intercept based off the average of the percent of inventory for 2010 to 2014, we predicted the growth, removal, and mortality percent of inventory for the years 2015 through 2064. Using these values, as well as user-input values for annual urbanization percent of inventory, we calculated a forecast for the White Oak inventory.
+
+As well as an inventory forecast, we also provide an upper bound and a lower bound (95% confidence interval), based off of the upper and lower estimates for the slope coefficient from the model. The 95% confidence interval means that we are 95% confident that the true values lies somewhere between the upper and lower bounds.
+
+##### Alternate Forecast
+We used the same methods to compile the alternate forecast, but instead of forecasting removal, we leave it as a user-defined field, similar to how the previous consultants compiled the forecast.
+
+However, we believe that predicting removal in the same manner as growth and mortality provides a better picture of the forecast, as the historic data could provide a better indication of the future trend rather than leaving it to the user to define.
