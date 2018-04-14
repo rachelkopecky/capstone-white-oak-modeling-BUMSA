@@ -21,7 +21,7 @@ resource_files:
 - national_forestry_service_regions.dbf
 - national_forestry_service_regions.prj
 - national_forestry_service_regions.qpj
-- national_forestry_service_regions.shp
+- national_forestry_service_regions.shp 
 - national_forestry_service_regions.shx
 runtime: shiny
 output:
