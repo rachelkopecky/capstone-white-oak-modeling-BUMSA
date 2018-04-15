@@ -34,7 +34,7 @@ The Brown-Forman production team has requested a forecast of the White Oak popul
 
 ### *Data*
 
-The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1991 through 2014.
+The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 2013 through 2014.
 
 ### *Simulation Dashboard*
 
