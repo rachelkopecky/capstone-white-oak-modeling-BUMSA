@@ -1,10 +1,19 @@
 ---
-title: "White Oak Population"
-categories: ["Data Science"]
-tags: ["Forecasting", "Production", "Bourbon"]
-draft: false
+title: "White Oak Forecast"
+draft: no
+tags:
+- Forecasting
+- Production
+- Bourbon
+categories: Data Science
 ---
-![](brown-forman-2788813.png)
+
+```{r, echo=FALSE}
+htmltools::img(src = knitr::image_uri("brown-forman-2788813.png"), 
+               alt = 'Brown Forman Logo', 
+               style = 'position:absolute; top:0; left:450px; padding:10px;')
+```
+
 
 **Created by Bellarmine University Graduate Students**
 
