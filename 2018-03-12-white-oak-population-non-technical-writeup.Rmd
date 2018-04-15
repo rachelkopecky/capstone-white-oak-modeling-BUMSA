@@ -1,0 +1,55 @@
+---
+title: "White Oak Population"
+categories: ["Data Science"]
+tags: ["Forecasting", "Production", "Bourbon"]
+draft: false
+---
+![](brown-forman-2788813.png)
+
+**Created by Bellarmine University Graduate Students**
+
+
+### *Conclusion/Result*
+
+**The white oak population will stay relatively flat in the near term.** Due to limited historical data, it is important to use caution when interpreting these results further into the forecast horizon. With only 13 annual data points to build the forecast, looking out past ten years serves best as a directional indication of the White Oak population.
+
+### *Methodology*
+
+To build a forecast for the white oak population over the next 50 years, we decided to use a **simulation**. A simulation will allow us to forecast current trends in growth, removal, and mortality, as well as incorporate variables to capture the rare events such as catastrophic wildfires, category 5 tornados, and large-scale pest outbreaks. These are events that we would not expect to occur every year, or even once every 10 years. Therefore, by incorporating the probability of these events to occur each year we are able to get a better understanding of how potential environmental disasters can impact the population.
+
+Included in the simulation is the current trend of growth, removal, and mortality, as well as the associated error so that we can be sure to capture the full range of where we might expect the population to be. These trends, as well as the potential for environmental outbreaks, will give us a final forecast that will be based off the average of all the simulated outcomes, and that should be relatively close to where we would expect the true population to be over the next few years.
+
+### *Purpose*
+
+The Brown-Forman production team has requested a forecast of the White Oak population in order to better understand any short and/or long term risk associated with the population growth and mortality. A previous consultant had provided a forecast that had some fairly significant errors, and our goal was to enhance the consultant's work so that the resulting forecast is up-to-date and accurate.
+
+### *Data*
+
+The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1991 through 2014.
+
+### *Simulation Dashboard*
+
+In order to forecast the White Oak population, we first calculated the yearly percent of inventory for the growth, removal, and mortality volumes. We then built a simple linear regression model to describe the trend of the growth, removal, and mortality, individually. Using the slope coefficient and an intercept based off the average of the percent of inventory for 2010 to 2014, we predicted the growth, removal, and mortality percent of inventory for the years 2015 through 2064. Using these values, as well as user-input values for annual urbanization percent of inventory, we calculated a forecast for the White Oak inventory.
+
+As well as an inventory forecast, we also provide an upper bound and a lower bound (95% confidence interval), based off of the upper and lower estimates for the slope coefficient from the model. The 95% confidence interval means that we are 95% confident that the true values lies somewhere between the upper and lower bounds.
+
+> To view the dashboard, <a href="http://arsconp.b-f.net:3939/white-oak-forecast/" target="_blank">click here</a>. 
+
+### *Apendix*
+#### *Simulation Variables*
+
+1. **White Oak**
++ The White Oak data used for this analysis was received from the U.S. Forest Service (USFS). The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern United States, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1968 through 2017. Although we have data for this period, the USFS changed the method that they use to build their population estimates, and therefore only data from 2002 onward will be used in this analysis, for consistency purposes.
+2. **Wildfire**
++ The wildfire data used for this analysis contains information on the notable wildfires that have occurred throughout history. These include the largest fires recorded in various states, as well as fires with high levels of destruction associated with them.
+3. **Invasive Species - Pests**
++ The Pest data used for this analysis was captured from the U.S. Department of Agriculture Forest Service. The data contain acres by state and region of pests (insects and disease) for forestry damage types: Defoliation, Mortality, and Other.
++ Acres are summarized from the current year’s observations only and are not cumulative. To avoid the multiple counting of acres, do not total these summaries across pests, years or damage types.
++ Source: [link]https://foresthealth.fs.usda.gov/portal/PestSummary/DamageSummary
+4. **Drought**
++ The Palmer Drought Severity Index is a measure of dryness in a region based on the amount of recent precipitation and overall temperature. It typically ranges from -4 being an extreme drought to +4 for extreme moisture although it can exceed those points up to +/- 7.
++ Source: [link]https://www.ncdc.noaa.gov/temp-and-precip/drought/historical-palmers/
+5. **Climate/Natural Disasters**
++ For this analysis we will utilize the four climate models created by the IPCC to understand how climate can affect the growth, removal, and mortality of the white oak population
++ Source: [link]https://www.data.gov
+ 
