@@ -9,7 +9,7 @@ categories: Data Science
 ---
 
 ```{r, echo=FALSE}
-htmltools::img(src = knitr::image_uri("brown-forman-2788813.png"), 
+htmltools::img(src = knitr::image_uri("brown-forman-2788813.png" ), 
                alt = 'Brown Forman Logo', 
                style = 'position:absolute; top:0; left:450px; padding:10px;')
 ```
