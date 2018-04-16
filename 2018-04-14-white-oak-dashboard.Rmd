@@ -67,7 +67,10 @@ library(rgdal)
 data <- read.csv("WhiteOakData/white-oak-clean.csv")
 inventory.map <- read_csv("inventory_map.csv")
 inventory.map.unit <- read_csv("inventory_map_unit.csv")
-#forecast <- read_csv("forecast_data.csv")
+forecast_total <- read_csv("sim-for-dash-TOTAL-INVENTORY.csv")
+forecast_r2 <- read_csv("sim-for-dash-REGION-2.csv")
+forecast_r8 <- read_csv("sim-for-dash-REGION-8.csv")
+forecast_r9 <- read_csv("sim-for-dash-REGION-9.csv")
 ```
 
 Forecast
@@ -78,28 +81,60 @@ Forecast
 Row
 -----------------------------------------------------------------------
 
-### White Oak Inventory Forecast *with 95% Confidence Interval*
+### White Oak Inventory Forecast *with 80% and 95% Confidence Interval*
 
 ```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
-#renderPlotly({
-  
-  # Build plot
-#  plt_alt <- ggplot(data = future_plt, aes(x = year, y = forecast_div, linetype = bounds, colour = bounds, size = bounds, group = type)) + 
-#    geom_line(aes(text = paste0("Year: ", year, "<br>Forecast: ", formattable::comma(forecast)))) +
-#    scale_colour_manual(values = c("maroon", "darkgreen")) +
-#    scale_linetype_manual(values = c(3,1)) +
-#    scale_size_manual(values = c(1,1)) +
-#    theme(panel.background = element_blank(),
-#          axis.line = element_line(colour = "black"),
-#          legend.position = 'none') +
-#    ylab("Inventory (Billions, Cubic Feet)") +
-#    xlab("") +
-#    scale_y_continuous(limits = c(0,110))
-  
-  
-#  ggplotly(plt_alt, tooltip = 'text')
-  
-#})
+
+high_sim <- forecast_total %>% 
+  filter(years == max(years)) %>% 
+  filter(sim_number != "mean" &
+           sim_number != "q90" &
+           sim_number != "q10"&
+           sim_number != "q975"&
+           sim_number != "q025") %>% 
+  filter(value == max(value))
+
+sim_high <- unique(high_sim$sim_number)
+
+low_sim <- forecast_total %>% 
+  filter(years == max(years)) %>% 
+  filter(sim_number != "mean" &
+           sim_number != "q90" &
+           sim_number != "q10"&
+           sim_number != "q975"&
+           sim_number != "q025") %>% 
+  filter(value == min(value))
+
+sim_low <- unique(low_sim$sim_number)
+
+need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+
+total_plot <- forecast_total %>% 
+  filter(sim_number %in% need_cols)  %>%
+  mutate(value = value/1000000000) %>% 
+  spread(sim_number, 
+         value) %>% 
+  select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+
+colnames(total_plot) <- c("years", "Median", "90%", "10%", "97.5%", "2.5%", "High", "Low")
+
+renderDygraph({
+  dygraph(total_plot,
+          main = "White Oak Forecast - Simulation",
+          xlab = "Year",
+          ylab = "Inventory (Billions, Cubic Feet)") %>%
+        dySeries("90%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+    dySeries("10%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+    dySeries("97.5%", color = "black", strokeWidth = 1) %>% 
+    dySeries("2.5%", color = "black", strokeWidth = 1) %>% 
+      dySeries("Median", color = "darkgreen", strokeWidth = 2) %>% 
+        dySeries(c("High", "Median", "Low"), color = "lightgrey") %>%
+  dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
+  dyRangeSelector(height = 10) %>%
+    dyLegend(show = "onmouseover") %>%
+    dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
+    dyAxis("y", valueRange = c(0, (max(total_plot$`97.5%`)+30)))
+})
 ```
 
 
@@ -129,103 +164,126 @@ units.shp <- readOGR("MapFiles", layer = "eastunits",
 # Merge inventory and shape files. Log transform for a more distinct break in heat map colors. 
 units.shp <- sp::merge(units.shp, inventory.map.unit, by = "UNIT")
 units.shp@data <- units.shp@data[complete.cases(units.shp@data),]
-units.shp@data$tot[units.shp@data$tot == 0] <- min(units.shp@data$tot[units.shp@data$tot > 0])-5000
-units.shp@data$tot.log <- log(units.shp@data$tot)
 
 # Read in region shape file (custom generated file)
 regions.shp <- readOGR("MapFiles", layer = "forestry_divisions",
                      GDAL1_integer64_policy = TRUE, verbose = FALSE)
 
-# Build map
 output$inventory_map_rm <- renderLeaflet({
   
-  # Set id to state abbreviation
+  units.shp@data$bin <- 0
+  
+  units.shp@data$bin <- ifelse(units.shp@data$tot <= 23429832, 1, 
+                         ifelse(units.shp@data$tot > 23429832 & units.shp@data$tot <= 101999860, 2,
+                          ifelse(units.shp@data$tot > 101999860 & units.shp@data$tot <= 231286069, 3, 
+                           ifelse(units.shp@data$tot > 231286069 & units.shp@data$tot <= 465505291, 4,
+                            ifelse(units.shp@data$tot > 465505291, 5, "NA")))))
+  
+  units.shp@data$bin <- factor(units.shp@data$bin, levels = c("1","2","3","4","5"))
+  
+  # Set id to region name
   id <- as.vector(regions.shp@data$NAME)
   
-  leaflet(units.shp, options = leafletOptions(zoomControl = FALSE))%>%
+  leaflet(units.shp)%>%
     addPolygons(color = '#444444', weight = 1, smoothFactor = 0.5,
                 opacity = 1.0, fillOpacity = 0.5,
-                fillColor = ~colorNumeric("YlGn", tot.log)(tot.log)) %>%
+                fillColor = ~colorFactor("YlGn", bin)(bin)) %>%
     # Layer transparent state shapes over units for state boundries
     addPolygons(data = states.shp, color = '#000000', weight = 1, smoothFactor = 0.5,
-                opacity = 1.0, fillOpacity = 0) %>%
+                opacity = 1.0, fillOpacity = 0) %>% 
     # Layer transparent forestry regions over map for clickable regions
     addPolygons(data = regions.shp, layerId = id, color = '#000000', weight = 1, smoothFactor = 0.5,
                 opacity = 1.0, fillOpacity = 0, label = id,
                 highlightOptions = highlightOptions(color = "gray", weight = 2,
-                                                    bringToFront = TRUE))      
+                                                    bringToFront = TRUE)) %>% 
+    addLegend("bottomleft", 
+              #pal = pal, 
+              colors = c("#FFFFCC", "#C2E699", "#78C679", "#31A354", "#006837"),
+              #values = ~units.shp@data$bin,
+              labels = c("Bottom 20%", "", "", "", "Top 20%"),
+              title = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Inventory&nbsp;&nbsp;&nbsp;&nbsp;",
+              opacity = 1)
   
 })
 
 leafletOutput('inventory_map_rm')
+
 ```
 
 
 ### Inventory Forecast by Region *with 95% Confidence Interval*
 
 ```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
-data$STATE_ABBR <- as.character(data$STATE_ABBR)
 
-# renderPlotly for inputs to work
-renderPlotly({
+# renderDygraph for inputs to work
+renderDygraph ({
+  
   # Store the id from the map click
   region.alt <- as.character(input$inventory_map_rm_shape_click$id)
   
-  # Validate statement to return a helpful error if they haven't yet clicked on a state.
-  # Filter data to the selected state.  
-  validate(need(try(region.alt <-
-                      filter(data, STATE_ABBR == region.alt))
-                , "Click on a state to the left to view the state-level forecast."))
-  
-  state.data.alt <- state.data.alt[, c(1, 2, 5:7)] %>%
-    group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
-    summarise_all(funs(sum(., na.rm = TRUE)))
-  
-  state.inv.alt <- inv.state.rolled %>%
-    select(STATE_ABBR, EVAL_GRP_YEAR, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
-    group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
-    summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
-  
-  state.mod.alt <-
-    merge(state.data.alt, state.inv.alt, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
-  
-  colnames(state.mod.alt)[3:6] <-
-    c("total.growth",
-      "total.mortality",
-      "total.removal",
-      "inv.gs")
-  
-  state.mod.alt$growth.change <- state.mod.alt$total.growth / state.mod.alt$inv.gs
-  state.mod.alt$mortality.change <- state.mod.alt$total.mortality / state.mod.alt$inv.gs
-  state.mod.alt$removal.change <- state.mod.alt$total.removal / state.mod.alt$inv.gs
-  
-  state.mod.alt <-
-    filter(state.mod.alt, EVAL_GRP_YEAR <= 2014 & EVAL_GRP_YEAR >= 1991)
-  
-  #check for consecutive years
-  validate(need(try(state.mod.alt$conesc <- 2), "There is no data associated with the selected state. Please select a colored state on the map to view the state level forecast."))
-  
-  # Validate statement to return a helpful error if the selected state does not have associated data.
-  validate(need(try(model_growth_st <- lm(growth.change ~ c(1:num.alt), data = state.mod.alt))
-                , "There is no forecast available for selected state."))
-  model_mortality_st <- lm(mortality.change ~ c(1:num.alt), data = state.mod.alt)
-  model_removal_st <- lm(removal.change ~ c(1:num.alt), data = state.mod.alt)
-  
-  plt_st_alt <- ggplot(data = future_plt, aes(x = year, y = forecast_div, linetype = bounds, colour = bounds, size = bounds, group = type)) + 
-    geom_line(aes(text = paste0("Year: ", year, "<br>Forecast: ", formattable::comma(forecast)))) +
-    scale_colour_manual(values = c("maroon", "darkgreen")) +
-    scale_linetype_manual(values = c(3,1)) +
-    scale_size_manual(values = c(1,1)) +
-    theme(panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = 'none') +
-    ylab(paste0(unique(state.mod.alt$STATE_ABBR)," Inventory (Billions, Cubic Feet)")) +
-    xlab("")
-  
-  
-  ggplotly(plt_st_alt, tooltip = 'text')
-  
+  validate(need(try(
+    if(region.alt == "Region 2") {
+      dat <- forecast_r2
+    } else if (region.alt == "Region 8") {
+      dat <- forecast_r8
+    } else if (region.alt == "Region 9") {
+      dat <- forecast_r9
+    } else {
+      print("Please select a shaded region from the map on the left to view the region-level forecast.")
+    }
+  ) , "Please select a shaded region from the map on the left to view the region-level forecast."))
+    
+    high_sim <- dat %>% 
+        filter(years == max(years)) %>% 
+        filter(sim_number != "mean" &
+                 sim_number != "q90" &
+                 sim_number != "q10" &
+                 sim_number != "q975" &
+                 sim_number != "q025") %>% 
+        filter(value == max(value))
+      
+      sim_high <- unique(high_sim$sim_number)
+      
+      low_sim <- dat %>% 
+        filter(years == max(years)) %>% 
+        filter(sim_number != "mean" &
+                 sim_number != "q90" &
+                 sim_number != "q10"&
+                 sim_number != "q975"&
+                 sim_number != "q025") %>% 
+        filter(value == min(value))
+      
+      sim_low <- unique(low_sim$sim_number)
+      
+      need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+      
+      plot <- dat %>% 
+        filter(sim_number %in% need_cols)  %>%
+        mutate(value = value/1000000000) %>% 
+        spread(sim_number, 
+               value) %>% 
+        select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+      
+      colnames(plot) <- c("years", "Median", "90%", "10%", "97.5%", "2.5%", "High", "Low")
+      
+      dygraph(plot,
+              main = paste("White Oak Forecast - Simulation -", region.alt),
+              xlab = "Year",
+              ylab = "Inventory (Billions, Cubic Feet)") %>%
+        dySeries("90%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+        dySeries("10%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+        dySeries("97.5%", color = "black", strokeWidth = 1) %>% 
+        dySeries("2.5%", color = "black", strokeWidth = 1) %>% 
+        dySeries("Median", color = "darkgreen", strokeWidth = 2) %>% 
+        dySeries(c("High", "Median", "Low"), color = "lightgrey") %>%
+        dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
+        dyRangeSelector(height = 10) %>%
+        dyLegend(show = "onmouseover") %>%
+        dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
+        dyAxis("y", valueRange = c(0, (max(plot$`97.5%`)+.1*max(plot$`97.5%`))))
+
 })
+
 ```
 
 Forecast Data
@@ -261,18 +319,6 @@ Row
 -----------------------------------------------------------------------
 
 ```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
-
-```
-
-Simulation
-=======================================================================
-```{r simulation}
-
-```
-
-In the simulation outline below, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain rate of change values the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include a yearly shock value to provide a simple example of how we can incorporate the outside variables like wildfire, pests, drought, etc. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
-
-```{r evaluate = FALSE}
 
 ```
 
