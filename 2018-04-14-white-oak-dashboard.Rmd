@@ -49,6 +49,8 @@ output:
 .leaflet-container {
     background-color:rgba(255,0,0,0.0);
 }
+.dygraph-legend > span { display: none; }
+.dygraph-legend > span.highlight { display: inline; }
 </style> 
 
 ```{r setup, include=FALSE}
@@ -110,6 +112,7 @@ sim_low <- unique(low_sim$sim_number)
 need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
 
 total_plot <- forecast_total %>% 
+  select(-type) %>% 
   filter(sim_number %in% need_cols)  %>%
   mutate(value = value/1000000000) %>% 
   spread(sim_number, 
@@ -221,6 +224,7 @@ renderDygraph ({
   # Store the id from the map click
   region.alt <- as.character(input$inventory_map_rm_shape_click$id)
   
+  {
   validate(need(try(
     if(region.alt == "Region 2") {
       dat <- forecast_r2
@@ -230,6 +234,7 @@ renderDygraph ({
       dat <- forecast_r9
     } else {
       print("Please select a shaded region from the map on the left to view the region-level forecast.")
+      stop()
     }
   ) , "Please select a shaded region from the map on the left to view the region-level forecast."))
     
@@ -281,7 +286,7 @@ renderDygraph ({
         dyLegend(show = "onmouseover") %>%
         dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
         dyAxis("y", valueRange = c(0, (max(plot$`97.5%`)+.1*max(plot$`97.5%`))))
-
+    }
 })
 
 ```
