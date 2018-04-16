@@ -5,28 +5,27 @@ resource_files:
 - dashboard/unit_bnd/eastunits.shp
 - cb_2016_us_state_500k.shp
 - eastunits.shp
-#- cb_2016_us_state_500k.cpg
-#- cb_2016_us_state_500k.dbf
-#- cb_2016_us_state_500k.prj
-#- cb_2016_us_state_500k.shp
-#- cb_2016_us_state_500k.shp.ea.iso.xml
-#- cb_2016_us_state_500k.shp.iso.xml
-#- cb_2016_us_state_500k.shp.xml
-#- cb_2016_us_state_500k.shx
-#- eastunits.dbf
-#- eastunits.shp
-#- eastunits.shp.xml
-#- eastunits.shx
-- national_forestry_service_regions.cpg
-- national_forestry_service_regions.dbf
-- national_forestry_service_regions.prj
-- national_forestry_service_regions.qpj 
-- national_forestry_service_regions.shp 
-- national_forestry_service_regions.shx
+- cb_2016_us_state_500k.cpg
+- cb_2016_us_state_500k.dbf
+- cb_2016_us_state_500k.prj
+- cb_2016_us_state_500k.shp
+- cb_2016_us_state_500k.shp.ea.iso.xml
+- cb_2016_us_state_500k.shp.iso.xml
+- cb_2016_us_state_500k.shp.xml
+- cb_2016_us_state_500k.shx
+- eastunits.dbf
+- eastunits.shp
+- eastunits.shp.xml
+- eastunits.shx
+- forestry_divisions.cpg
+- forestry_divisions.dbf
+- forestry_divisions.prj
+- forestry_divisions.shp
+- forestry_divisions.shx
 runtime: shiny
 output:
   flexdashboard::flex_dashboard:
-    logo: brown-forman_416x416.jpg
+    logo: bf-logo.png
     orientation: rows
     source_code: embed
     theme: readable
@@ -65,46 +64,2058 @@ library(leaflet)
 library(rgdal)
 
 ```
+TESTING
+======================================================================
+```{r}
+# Load required libraries
+library(flexdashboard)
+library(tidyverse)
+library(ggplot2)
+library(shiny)
+library(plotly)
+library(formattable)
+library(leaflet)
+library(rgdal)
+
+# Read in the data. This data was cleaned and merged in the for_dashboard.R script.
+data <- read.csv("WhiteOakData/white-oak-clean.csv")
+
+data[is.na(data)] <- 0
+
+# Aggregate the growth, removal, and mortality data to the country level
+national <- data %>% 
+  group_by(EVAL_GRP_YEAR) %>%
+  summarise(total.growth = sum(SELECT_WHITE_OAK_GROWTH, na.rm = TRUE),
+            total.mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE),
+            total.removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE))
+
+# Read in and manipulate inventory data. These are the raw files from the US Forest service.
+inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
+inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
+inv33 <- read_csv("WhiteOakData/white_oak_inv_33.csv")
+
+inventory <- rbind(inv23, inv24, inv33)
+
+inventory[is.na(inventory)] <- 0
+
+# Create an identifier to merge with the shape files later.
+inventory$UNIT <- paste0(inventory$STATECD, "0", inventory$UNITCD)
+
+# Don't think I need both of these next two
+inventory.state <- inventory[,c(3,5,6,10:27)] %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNITCD) %>% 
+  summarise_all(funs(sum(., na.rm = TRUE)))
+
+inv.state.rolled <- inventory.state[,c(1,2,4:21)] %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+  summarise_all(funs(sum(., na.rm = TRUE)))
+
+# Aggregate to unit level inventory for heat map.
+inv.unit.rolled <- inventory[,c(3,5,31,10:27)] %>% 
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>% 
+  summarise_all(funs(sum(., na.rm = TRUE)))
+
+# Create list of unique states in the growth/removal/mortality data and filter the inventory data so that all states appear in both sets.
+state_list <- unique(data$STATE_ABBR)
+
+inv_national <- inv.state.rolled %>%
+  filter(STATE_ABBR %in% state_list) 
+
+# Aggregate the inventory data to the country level.
+inv_national <- inv_national[2:20] %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise_all(funs(sum(., na.rm = TRUE)))
+
+# Select relevant columns and merge the national inventory data with the national growth/removal/mortality data.
+inventory_national <- inv_national %>% 
+  select(EVAL_GRP_YEAR, SELECT_WHITE_OAK_INV_CUFT_GS, SELECT_WHITE_OAK_INV_CUFT_LIVE)
+
+national <- merge(national, inventory_national, by = "EVAL_GRP_YEAR")
+
+colnames(national)[5:6] <- c("inv.gs", "inv.live")
+
+national$growth.pct <- 0
+national$mortality.pct <- 0
+national$removal.pct <- 0
+
+# Calculate the growth/removal/mortality percent of growing stock inventory.
+national$growth.pct <- national$total.growth/national$inv.gs
+national$mortality.pct <- national$total.mortality/national$inv.gs
+national$removal.pct <- national$total.removal/national$inv.gs
+  
+# Exclude data prior to 1991 and after 2014. All units were not sampled prior to 1991, and '15, `16 and `17 data may be incomplete per US Forest Service.
+national <- filter(national, EVAL_GRP_YEAR <= 2014 & EVAL_GRP_YEAR >= 1991)
+
+# Build models. I regressed against the values 1:24 so I could verify the intercept. Whether you regress against this or the actual year values, the slope remains the same.
+model_growth <- lm(growth.pct ~ c(1:24), data = national)
+model_mortality <- lm(mortality.pct ~ c(1:24), data = national)
+model_removal <- lm(removal.pct ~ c(1:24), data = national)
+
+# Store slope coefficients
+growth_slope <- coef(model_growth)[[2]]
+mortality_slope <- coef(model_mortality)[[2]]
+removal_slope <- coef(model_removal)[[2]]
+
+# Store upper and lower bounds on slope coefficients
+growth_slope_upper <- confint(model_growth)[4]
+growth_slope_lower <- confint(model_growth)[2]
+
+mortality_slope_upper <- confint(model_mortality)[4]
+mortality_slope_lower <- confint(model_mortality)[2]
+
+removal_slope_upper <- confint(model_removal)[4]
+removal_slope_lower <- confint(model_removal)[2]
+
+# Use average of 2010 - 2014 as intercept
+growth_int <- mean(national$growth.pct[20:24])
+mortality_int <- mean(national$mortality.pct[20:24])
+removal_int <- mean(national$removal.pct[20:24])
+```
+
+Forecast
+=======================================================================
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+\
+
+\
+
+
+\
+
+
+\
+
+\
+
+*See **Documentation** for explanation of forecast methods.*
+
+Row
+-----------------------------------------------------------------------
+
+### White Oak Inventory Forecast *with 95% Confidence Interval*
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+# Build "forecast" dataframe
+future_alt <- NULL
+future_alt$year <- 2014:2064
+future_alt <- data.frame(future_alt)
+
+future_alt$inventory <- 0
+future_alt$inventory.high <- 0
+future_alt$inventory.low <- 0
+future_alt$growth <- 0
+future_alt$growth.high <- 0
+future_alt$growth.low <- 0
+future_alt$removals <- 0
+future_alt$removal.low <- 0
+future_alt$removal.high <- 0
+future_alt$mortality <- 0
+future_alt$mortality.high <- 0
+future_alt$mortality.low <- 0
+future_alt$urbanization <- 0
+future_alt$urbanization.high <- 0
+future_alt$urbanization.low <- 0
+future_alt$demand <- 0
+future_alt$`demand % of inventory` <- 0
+future_alt$`demand % of removals` <- 0
+
+# Fill in data for 2014
+inv_14 <- inventory_national %>% 
+  filter(EVAL_GRP_YEAR == 2014) %>% 
+  select(SELECT_WHITE_OAK_INV_CUFT_GS)
+
+future_alt$inventory[1] <- as.numeric(inv_14[1,1])
+future_alt$inventory.high[1] <- as.numeric(inv_14[1,1])
+future_alt$inventory.low[1] <- as.numeric(inv_14[1,1])
+future_alt$growth[1] <- national$total.growth[nrow(national)]
+future_alt$removal.high[1] <- national$total.removal[nrow(national)]
+future_alt$removal.low[1] <- national$total.removal[nrow(national)]
+future_alt$removals[1] <- national$total.removal[nrow(national)]
+future_alt$mortality[1] <- national$total.mortality[nrow(national)]
+future_alt$growth.high[1] <- national$total.growth[nrow(national)]
+future_alt$mortality.high[1] <- national$total.mortality[nrow(national)]
+future_alt$growth.low[1] <- national$total.growth[nrow(national)]
+future_alt$mortality.low[1] <- national$total.mortality[nrow(national)]
+
+# Calculate growth and mortality % "forecast"
+future_alt$dummy <- 0:50
+
+future_alt$new_growth <- ((future_alt$dummy*growth_slope)+growth_int)
+future_alt$new_mortality <- ((future_alt$dummy*mortality_slope)+mortality_int)
+future_alt$new_removal <- ((future_alt$dummy*removal_slope)+removal_int)
+
+future_alt$high_growth <- ((future_alt$dummy*growth_slope_upper)+growth_int)
+future_alt$high_mortality <- ((future_alt$dummy*mortality_slope_upper)+mortality_int)
+future_alt$high_removal <- ((future_alt$dummy*removal_slope_upper)+removal_int)
+
+future_alt$low_growth <- ((future_alt$dummy*growth_slope_lower)+growth_int)
+future_alt$low_mortality <- ((future_alt$dummy*mortality_slope_lower)+mortality_int)
+future_alt$low_removal <- ((future_alt$dummy*removal_slope_lower)+removal_int)
+
+# growth, removal, mortality cannot be a negative % of inventory
+future_alt$low_removal <- ifelse(future_alt$low_removal <= 0, 0, future_alt$low_removal)
+future_alt$low_growth <- ifelse(future_alt$low_growth <= 0, 0, future_alt$low_growth)
+future_alt$low_mortality <- ifelse(future_alt$low_mortality <= 0, 0, future_alt$low_mortality)
+
+future_alt$high_removal <- ifelse(future_alt$high_removal <= 0, 0, future_alt$high_removal)
+future_alt$high_growth <- ifelse(future_alt$high_growth <= 0, 0, future_alt$high_growth)
+future_alt$high_mortality <- ifelse(future_alt$high_mortality <= 0, 0, future_alt$high_mortality)
+
+future_alt$new_removal <- ifelse(future_alt$new_removal <= 0, 0, future_alt$new_removal)
+future_alt$new_growth <- ifelse(future_alt$new_growth <= 0, 0, future_alt$new_growth)
+future_alt$new_mortality <- ifelse(future_alt$new_mortality <= 0, 0, future_alt$new_mortality)
+
+future_alt$dummy <- NULL
+
+# renderPlot for inputs to work
+# renderggiraph for ggiraph graph
+# renderPlotly for plotly graph
+
+renderPlotly({
+  
+  # fill in forecast table row by row
+  for (i in 2:nrow(future_alt)) {
+    # Inventory = Inventory + Growth - Removal - Mortality - Urbanization  
+    future_alt$inventory[i] <- future_alt$inventory[i-1] + future_alt$growth[i-1] - future_alt$removals[i-1] - future_alt$mortality[i-1] - future_alt$urbanization[i-1]
+    
+    # Upper Bound Inventory = Upper Bound Inventory + High Growth - Low Removal - Low Mortality - High Urbanization (i.e. the Urbanization calculated from the High Inventory)
+    future_alt$inventory.high[i] <- future_alt$inventory.high[i-1] + future_alt$growth.high[i-1] - future_alt$removal.low[i-1] - future_alt$mortality.low[i-1] - future_alt$urbanization.high[i-1]
+    
+    # Lower Bound Inventory = Lower Bound Inventory + Low Growth - High Removal - High Mortality - Low Urbanization (i.e. the Urbanization calculated from the Low Inventory)
+    future_alt$inventory.low[i] <- future_alt$inventory.low[i-1] + future_alt$growth.low[i-1] - future_alt$removal.high[i-1] - future_alt$mortality.high[i-1] - future_alt$urbanization.low[i-1]
+    
+    future_alt$growth[i] <- future_alt$inventory[i]*(future_alt$new_growth[i])    
+    future_alt$growth.high[i] <- future_alt$inventory.high[i]*(future_alt$high_growth[i])
+    future_alt$growth.low[i] <- future_alt$inventory.low[i]*(future_alt$low_growth[i])
+    
+    future_alt$mortality[i] <- future_alt$inventory[i]*(future_alt$new_mortality[i])
+    future_alt$mortality.high[i] <- future_alt$inventory.low[i]*(future_alt$high_mortality[i])
+    future_alt$mortality.low[i] <- future_alt$inventory.high[i]*(future_alt$low_mortality[i])
+    
+    future_alt$removals[i] <- future_alt$inventory[i]*future_alt$new_removal[i]
+    future_alt$removal.high[i] <- future_alt$inventory.low[i]*future_alt$high_removal[i]
+    future_alt$removal.low[i] <- future_alt$inventory.high[i]*future_alt$low_removal[i]
+    
+    future_alt$urbanization[i] <- future_alt$inventory[i]*(as.numeric(input$urbanization2)/100)
+    future_alt$urbanization.high[i] <- future_alt$inventory.high[i]*(as.numeric(input$urbanization2)/100)
+    future_alt$urbanization.low[i] <- future_alt$inventory.low[i]*(as.numeric(input$urbanization2)/100)
+    
+  }
+  
+  future_alt$inventory <- round(as.numeric(future_alt$inventory),0)
+  future_alt$inventory.high <- round(as.numeric(future_alt$inventory.high),0)
+  future_alt$inventory.low <- round(as.numeric(future_alt$inventory.low),0)  
+  
+  # Select relevant columns for inventory plot.
+  future_plt <- select(future_alt, year, inventory, inventory.high, inventory.low)
+  
+  # Transform to long format for easier ggplot use.
+  future_plt <- tidyr::gather(future_plt, 
+                              key = 'type', 
+                              value = 'forecast', 
+                              -year)
+  
+  # Divide by 1 Billion for cleaner y-axis
+  future_plt$forecast_div <- future_plt$forecast/1000000000
+  
+  # Bounds as factors for color differential
+  future_plt$bounds <- ifelse(future_plt$type == "inventory", "n", "y")
+  future_plt$bounds <- factor(future_plt$bounds, levels = c("y", "n"))
+  
+  # Build plot
+  plt_alt <- ggplot(data = future_plt, aes(x = year, y = forecast_div, linetype = bounds, colour = bounds, size = bounds, group = type)) + 
+    geom_line(aes(text = paste0("Year: ", year, "<br>Forecast: ", formattable::comma(forecast)))) +
+    scale_colour_manual(values = c("maroon", "darkgreen")) +
+    scale_linetype_manual(values = c(3,1)) +
+    scale_size_manual(values = c(1,1)) +
+    theme(panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = 'none') +
+    ylab("Inventory (Billions, Cubic Feet)") +
+    xlab("") +
+    scale_y_continuous(limits = c(0,110))
+  
+  
+  ggplotly(plt_alt, tooltip = 'text')
+  
+})
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### Current Inventory (2014) by FIA Unit
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+# Aggregate to state level to merge with state shape file
+inventory.map <- inv.state.rolled %>%
+  select(STATE_ABBR, EVAL_GRP_YEAR, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+  summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE)) %>%
+  filter(EVAL_GRP_YEAR == 2014)
+
+# Aggregate to unit level to merge with unit shape file
+inventory.map.unit <- inv.unit.rolled %>%
+  select(STATE_ABBR, EVAL_GRP_YEAR, UNIT, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>%
+  summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS)) %>%
+  filter(EVAL_GRP_YEAR == 2014)
+
+colnames(inventory.map)[1] <- "STUSPS"
+
+# Read in state shape file
+states_shp <- readOGR("MapFiles", layer = "cb_2016_us_state_500k",
+                      GDAL1_integer64_policy = TRUE, verbose = FALSE)
+
+# Remove non-contiguous states/territories
+states.shp <- subset(states_shp, !states_shp$STUSPS %in% c("AK", "GU", "MP", "VI", "AS", "PR", "HI"))
+
+# Merge shape and inventory files
+states.shp <- sp::merge(states.shp, inventory.map, by = "STUSPS")
+
+stusps <- as.vector(as.character(states.shp@data$STUSPS))
+
+# Read in unit shape file (from US forest service)
+units_shp <- readOGR("MapFiles", layer = "eastunits",
+                     GDAL1_integer64_policy = TRUE, verbose = FALSE)
+
+# Merge inventory and shape files. Log transform for a more distinct break in heat map colors. 
+units.shp <- sp::merge(units_shp, inventory.map.unit, by = "UNIT")
+units.shp@data <- units.shp@data[complete.cases(units.shp@data),]
+units.shp@data$tot[units.shp@data$tot == 0] <- min(units.shp@data$tot[units.shp@data$tot > 0])-5000
+units.shp@data$tot.log <- log(units.shp@data$tot)
+
+# Build map
+output$inventory_map_rm <- renderLeaflet({
+  
+  # Set id to state abbreviation
+  id <- as.vector(states.shp@data$STUSPS)
+  
+  leaflet(units.shp, options = leafletOptions(zoomControl = FALSE))%>%
+    addPolygons(color = '#444444', weight = 1, smoothFactor = 0.5,
+                opacity = 1.0, fillOpacity = 0.5,
+                fillColor = ~colorNumeric("YlGn", tot.log)(tot.log)) %>%
+    # Layer transparent state shapes over units for clickable states
+    addPolygons(data = states.shp, layerId = id, color = '#000000', weight = 1, smoothFactor = 0.5,
+                opacity = 1.0, fillOpacity = 0, label = id,
+                highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                    bringToFront = TRUE))
+  
+})
+
+leafletOutput('inventory_map_rm')
+```
+
+
+### Inventory Forecast by State *with 95% Confidence Interval*
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+data$STATE_ABBR <- as.character(data$STATE_ABBR)
+
+# renderPlotly for inputs to work
+renderPlotly({
+  # Store the id from the map click
+  st.alt <- as.character(input$inventory_map_rm_shape_click$id)
+  
+  # Validate statement to return a helpful error if they haven't yet clicked on a state.
+  # Filter data to the selected state.  
+  validate(need(try(state.data.alt <-
+                      filter(data, STATE_ABBR == st.alt))
+                , "Click on a state to the left to view the state-level forecast."))
+  
+  state.data.alt <- state.data.alt[, c(1, 2, 5:7)] %>%
+    group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+    summarise_all(funs(sum(., na.rm = TRUE)))
+  
+  state.inv.alt <- inv.state.rolled %>%
+    select(STATE_ABBR, EVAL_GRP_YEAR, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
+    group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+    summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+  
+  state.mod.alt <-
+    merge(state.data.alt, state.inv.alt, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
+  
+  colnames(state.mod.alt)[3:6] <-
+    c("total.growth",
+      "total.mortality",
+      "total.removal",
+      "inv.gs")
+  
+  state.mod.alt$growth.change <- state.mod.alt$total.growth / state.mod.alt$inv.gs
+  state.mod.alt$mortality.change <- state.mod.alt$total.mortality / state.mod.alt$inv.gs
+  state.mod.alt$removal.change <- state.mod.alt$total.removal / state.mod.alt$inv.gs
+  
+  state.mod.alt <-
+    filter(state.mod.alt, EVAL_GRP_YEAR <= 2014 & EVAL_GRP_YEAR >= 1991)
+  
+  #check for consecutive years
+  validate(need(try(state.mod.alt$conesc <- 2), "There is no data associated with the selected state. Please select a colored state on the map to view the state level forecast."))
+  
+  for(i in 1:(nrow(state.mod.alt)-1)) {
+    if((state.mod.alt$EVAL_GRP_YEAR[i+1] == (state.mod.alt$EVAL_GRP_YEAR[i]) + 1)) {
+      state.mod.alt$consec[i] <- 0
+    } else {
+      state.mod.alt$consec[i] <- 1
+    }
+  }
+  
+  state.mod.alt$consec[nrow(state.mod.alt)] <- 0 
+  
+  state.mod.alt <- filter(state.mod.alt, consec == 0)
+  
+  # Build model
+  num.alt <- nrow(state.mod.alt)
+  
+  # Validate statement to return a helpful error if the selected state does not have associated data.
+  validate(need(try(model_growth_st <- lm(growth.change ~ c(1:num.alt), data = state.mod.alt))
+                , "There is no forecast available for selected state."))
+  model_mortality_st <- lm(mortality.change ~ c(1:num.alt), data = state.mod.alt)
+  model_removal_st <- lm(removal.change ~ c(1:num.alt), data = state.mod.alt)
+  
+  # Store coefficients
+  growth_slope_st <- coef(model_growth_st)[[2]]
+  mortality_slope_st <- coef(model_mortality_st)[[2]]
+  removal_slope_st <- coef(model_removal_st)[[2]]
+  
+  # Store upper and lower bounds
+  growth_slope_upper_st <- confint(model_growth_st)[4]
+  growth_slope_lower_st <- confint(model_growth_st)[2]
+  
+  mortality_slope_upper_st <- confint(model_mortality_st)[4]
+  mortality_slope_lower_st <- confint(model_mortality_st)[2]
+  
+  removal_slope_upper_st <- confint(model_removal_st)[4]
+  removal_slope_lower_st <- confint(model_removal_st)[2]
+  
+  # Use average of 2010 - 2014 as intercept
+  for_int <- filter(state.mod.alt, EVAL_GRP_YEAR >= 2010)
+  growth_int_st <- mean(for_int$growth.change)
+  mortality_int_st <- mean(for_int$mortality.change)
+  removal_int_st <- mean(for_int$removal.change)
+  
+  # Build "forecast" dataframe
+  future_st_alt <- NULL
+  future_st_alt$year <- 2014:2040
+  future_st_alt <- data.frame(future_st_alt)
+  
+  future_st_alt$inventory <- 0
+  future_st_alt$inventory.high <- 0
+  future_st_alt$inventory.low <- 0
+  future_st_alt$growth <- 0
+  future_st_alt$growth.high <- 0
+  future_st_alt$growth.low <- 0
+  future_st_alt$removals <- 0
+  future_st_alt$removal.low <- 0
+  future_st_alt$removal.high <- 0
+  future_st_alt$mortality <- 0
+  future_st_alt$mortality.high <- 0
+  future_st_alt$mortality.low <- 0
+  future_st_alt$urbanization <- 0
+  future_st_alt$urbanization.high <- 0
+  future_st_alt$urbanization.low <- 0
+  
+  # Fill in data for 2014
+  inv_14 <- state.mod.alt %>%
+    filter(EVAL_GRP_YEAR == 2014) %>%
+    select(inv.gs)
+  
+  future_st_alt$inventory[1] <- as.numeric(inv_14[1, 1])
+  future_st_alt$inventory.high[1] <- as.numeric(inv_14[1, 1])
+  future_st_alt$inventory.low[1] <- as.numeric(inv_14[1, 1])
+  future_st_alt$growth[1] <- state.mod.alt$total.growth[nrow(state.mod.alt)]
+  future_st_alt$removals[1] <- state.mod.alt$total.removal[nrow(state.mod.alt)]
+  future_st_alt$removal.low[1] <- state.mod.alt$total.removal[nrow(state.mod.alt)]
+  future_st_alt$removal.high[1] <- state.mod.alt$total.removal[nrow(state.mod.alt)]
+  future_st_alt$mortality[1] <- state.mod.alt$total.mortality[nrow(state.mod.alt)]
+  future_st_alt$growth.high[1] <- state.mod.alt$total.growth[nrow(state.mod.alt)]
+  future_st_alt$mortality.high[1] <- state.mod.alt$total.mortality[nrow(state.mod.alt)]
+  future_st_alt$growth.low[1] <- state.mod.alt$total.growth[nrow(state.mod.alt)]
+  future_st_alt$mortality.low[1] <- state.mod.alt$total.mortality[nrow(state.mod.alt)]
+  
+  # Calculate growth and mortality % "forecast"
+  future_st_alt$dummy <- 0:26
+  
+  future_st_alt$new_growth <- ((future_st_alt$dummy * growth_slope_st) + growth_int_st)
+  future_st_alt$new_mortality <- ((future_st_alt$dummy * mortality_slope_st) + mortality_int_st)
+  future_st_alt$new_removal <- (future_st_alt$dummy * removal_slope_st) + removal_int_st
+  
+  future_st_alt$high_growth <- ((future_st_alt$dummy * growth_slope_upper_st) + growth_int_st)
+  future_st_alt$high_mortality <- ((future_st_alt$dummy * mortality_slope_upper_st) + mortality_int_st)
+  future_st_alt$high_removal <- (future_st_alt$dummy * removal_slope_upper_st) + removal_int_st
+  
+  future_st_alt$low_growth <- ((future_st_alt$dummy * growth_slope_lower_st) + growth_int_st)
+  future_st_alt$low_mortality <- ((future_st_alt$dummy * mortality_slope_lower_st) + mortality_int_st)
+  future_st_alt$low_removal <- (future_st_alt$dummy * removal_slope_lower_st) + removal_int_st
+  
+  # growth, removal, mortality cannot be a negative % of inventory
+  future_st_alt$low_removal <- ifelse(future_st_alt$low_removal <= 0, 0, future_st_alt$low_removal)
+  future_st_alt$low_growth <- ifelse(future_st_alt$low_growth <= 0, 0, future_st_alt$low_growth)
+  future_st_alt$low_mortality <- ifelse(future_st_alt$low_mortality <= 0, 0, future_st_alt$low_mortality)
+  
+  future_st_alt$high_removal <- ifelse(future_st_alt$high_removal <= 0, 0, future_st_alt$high_removal)
+  future_st_alt$high_growth <- ifelse(future_st_alt$high_growth <= 0, 0, future_st_alt$high_growth)
+  future_st_alt$high_mortality <- ifelse(future_st_alt$high_mortality <= 0, 0, future_st_alt$high_mortality)
+  
+  future_st_alt$new_removal <- ifelse(future_st_alt$new_removal <= 0, 0, future_st_alt$new_removal)
+  future_st_alt$new_growth <- ifelse(future_st_alt$new_growth <= 0, 0, future_st_alt$new_growth)
+  future_st_alt$new_mortality <- ifelse(future_st_alt$new_mortality <= 0, 0, future_st_alt$new_mortality)
+  
+  future_st_alt$dummy <- NULL
+  
+  # fill in forecast table row by row
+  for (i in 2:nrow(future_st_alt)) {
+    future_st_alt$inventory[i] <-
+      future_st_alt$inventory[i - 1] + future_st_alt$growth[i - 1] - future_st_alt$removals[i - 1] - future_st_alt$mortality[i - 1] - future_st_alt$urbanization[i - 1]
+    
+    future_st_alt$inventory.high[i] <-
+      future_st_alt$inventory.high[i - 1] + future_st_alt$growth.high[i - 1] - future_st_alt$removal.low[i - 1] - future_st_alt$mortality.low[i - 1] - future_st_alt$urbanization.high[i - 1]
+    
+    future_st_alt$inventory.low[i] <-
+      future_st_alt$inventory.low[i - 1] + future_st_alt$growth.low[i - 1] - future_st_alt$removal.high[i - 1] - future_st_alt$mortality.high[i - 1] - future_st_alt$urbanization.low[i - 1]
+    
+    future_st_alt$growth[i] <- future_st_alt$inventory[i] * (future_st_alt$new_growth[i])
+    future_st_alt$growth.high[i] <- future_st_alt$inventory.high[i] * (future_st_alt$high_growth[i])
+    future_st_alt$growth.low[i] <- future_st_alt$inventory.low[i] * (future_st_alt$low_growth[i])      
+    
+    future_st_alt$mortality[i] <- future_st_alt$inventory[i] * (future_st_alt$new_mortality[i])
+    future_st_alt$mortality.high[i] <- future_st_alt$inventory.low[i] * (future_st_alt$high_mortality[i])
+    future_st_alt$mortality.low[i] <- future_st_alt$inventory.high[i] * (future_st_alt$low_mortality[i])
+    
+    future_st_alt$removals[i] <- future_st_alt$inventory[i] * (future_st_alt$new_removal[i])
+    future_st_alt$removal.high[i] <- future_st_alt$inventory.low[i] * future_st_alt$high_removal[i]
+    future_st_alt$removal.low[i] <- future_st_alt$inventory.high[i] * future_st_alt$low_removal[i]
+    
+    future_st_alt$urbanization[i] <- future_st_alt$inventory[i] * (as.numeric(input$urbanization2) / 100)
+    future_st_alt$urbanization.high[i] <- future_st_alt$inventory.high[i] * (as.numeric(input$urbanization2) / 100)
+    future_st_alt$urbanization.low[i] <- future_st_alt$inventory.low[i] * (as.numeric(input$urbanization2) / 100)
+    
+  }
+  
+  future_st_alt$inventory <- round(as.numeric(future_st_alt$inventory),0)
+  future_st_alt$inventory.high <- round(as.numeric(future_st_alt$inventory.high),0)
+  future_st_alt$inventory.low <- round(as.numeric(future_st_alt$inventory.low),0)    
+  
+  future_plt <- select(future_st_alt, year, inventory, inventory.high, inventory.low)
+  
+  future_plt <- tidyr::gather(future_plt, 
+                              key = 'type', 
+                              value = 'forecast', 
+                              -year)
+  
+  future_plt$forecast_div <- future_plt$forecast/1000000000
+  future_plt$bounds <- ifelse(future_plt$type == "inventory", "n", "y")
+  
+  future_plt$bounds <- factor(future_plt$bounds, levels = c("y", "n"))
+  
+  plt_st_alt <- ggplot(data = future_plt, aes(x = year, y = forecast_div, linetype = bounds, colour = bounds, size = bounds, group = type)) + 
+    geom_line(aes(text = paste0("Year: ", year, "<br>Forecast: ", formattable::comma(forecast)))) +
+    scale_colour_manual(values = c("maroon", "darkgreen")) +
+    scale_linetype_manual(values = c(3,1)) +
+    scale_size_manual(values = c(1,1)) +
+    theme(panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = 'none') +
+    ylab(paste0(unique(state.mod.alt$STATE_ABBR)," Inventory (Billions, Cubic Feet)")) +
+    xlab("")
+  
+  
+  ggplotly(plt_st_alt, tooltip = 'text')
+  
+})
+```
+
+Alternate Forecast
+=======================================================================
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+\
+
+\
+
+Use the sliding bars below to adjust the increase in Annual Removal and Urbanization to see the effect these factors can have on the White Oak Population.
+
+\
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+tags$style(HTML(".sidebarPanel .body {background-color: lightgrey;}"))
+
+tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: green}"))
+tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: green}"))
+
+sliderInput("removal", label = "Annual Removal Increase (%):",
+            min = 0.0, max = 1.0, value = 0.5, step = 0.1)
+
+sliderInput("urbanization", label = "Annual Urbanization (% of White Oak Inventory):",
+            min = 0.0, max = 1.0, value = 0.1, step = 0.1)
+```
+
+\
+
+\
+
+*See **Documentation** for explanation of forecast methods.*
+
+Row
+-----------------------------------------------------------------------
+
+### White Oak Inventory Forecast *with 95% Confidence Interval*
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+# Build "forecast" dataframe
+future <- NULL
+future$year <- 2014:2064
+future <- data.frame(future)
+
+future$inventory <- 0
+future$inventory.high <- 0
+future$inventory.low <- 0
+future$growth <- 0
+future$growth.high <- 0
+future$growth.low <- 0
+future$removals <- 0
+future$mortality <- 0
+future$mortality.high <- 0
+future$mortality.low <- 0
+future$urbanization <- 0
+future$urbanization.high <- 0
+future$urbanization.low <- 0
+future$demand <- 0
+future$`demand % of inventory` <- 0
+future$`demand % of removals` <- 0
+
+# Fill in data for 2014
+inv_14 <- inventory_national %>% 
+  filter(EVAL_GRP_YEAR == 2014) %>% 
+  select(SELECT_WHITE_OAK_INV_CUFT_GS)
+
+future$inventory[1] <- as.numeric(inv_14[1,1])
+future$inventory.high[1] <- as.numeric(inv_14[1,1])
+future$inventory.low[1] <- as.numeric(inv_14[1,1])
+future$growth[1] <- national$total.growth[nrow(national)]
+future$removals[1] <- national$total.removal[nrow(national)]
+future$mortality[1] <- national$total.mortality[nrow(national)]
+future$growth.high[1] <- national$total.growth[nrow(national)]
+future$mortality.high[1] <- national$total.mortality[nrow(national)]
+future$growth.low[1] <- national$total.growth[nrow(national)]
+future$mortality.low[1] <- national$total.mortality[nrow(national)]
+
+# Calculate growth and mortality % "forecast"
+future$dummy <- 0:50
+
+future$new_growth <- ((future$dummy*growth_slope)+growth_int)
+future$new_mortality <- ((future$dummy*mortality_slope)+mortality_int)
+
+future$high_growth <- ((future$dummy*growth_slope_upper)+growth_int)
+future$high_mortality <- ((future$dummy*mortality_slope_upper)+mortality_int)
+
+future$low_growth <- ((future$dummy*growth_slope_lower)+growth_int)
+future$low_mortality <- ((future$dummy*mortality_slope_lower)+mortality_int)
+
+# Cannot be negative % of inventory
+future$low_growth <- ifelse(future$low_growth <= 0, 0, future$low_growth)
+future$low_mortality <- ifelse(future$low_mortality <= 0, 0, future$low_mortality)
+
+future$high_growth <- ifelse(future$high_growth <= 0, 0, future$high_growth)
+future$high_mortality <- ifelse(future$high_mortality <= 0, 0, future$high_mortality)
+
+future$new_growth <- ifelse(future$new_growth <= 0, 0, future$new_growth)
+future$new_mortality <- ifelse(future$new_mortality <= 0, 0, future$new_mortality)
+
+future$dummy <- NULL
+
+# renderPlot for inputs to work
+# renderggiraph for ggiraph graph
+# renderPlotly for plotly graph
+
+renderPlotly({
+  
+  # fill in forecast table row by row
+  for (i in 2:nrow(future)) {
+    future$inventory[i] <- future$inventory[i-1] + future$growth[i-1] - future$removals[i-1] - future$mortality[i-1] - future$urbanization[i-1]
+    
+    future$inventory.high[i] <- future$inventory.high[i-1] + future$growth.high[i-1] - future$removals[i-1] - future$mortality.low[i-1] - future$urbanization.high[i-1]
+    
+    future$inventory.low[i] <- future$inventory.low[i-1] + future$growth.low[i-1] - future$removals[i-1] - future$mortality.high[i-1] - future$urbanization.low[i-1]
+    
+    future$growth[i] <- future$inventory[i]*(future$new_growth[i])
+    future$growth.high[i] <- future$inventory.high[i]*(future$high_growth[i])
+    future$growth.low[i] <- future$inventory.low[i]*(future$low_growth[i])
+    
+    future$mortality[i] <- future$inventory[i]*(future$new_mortality[i])
+    future$mortality.high[i] <- future$inventory.low[i]*(future$high_mortality[i])
+    future$mortality.low[i] <- future$inventory.high[i]*(future$low_mortality[i])
+    
+    future$removals[i] <- future$removals[i-1]*((1 + as.numeric(input$removal)/100))
+    
+    future$urbanization[i] <- future$inventory[i]*(as.numeric(input$urbanization)/100)
+    future$urbanization.high[i] <- future$inventory.high[i]*(as.numeric(input$urbanization)/100)
+    future$urbanization.low[i] <- future$inventory.low[i]*(as.numeric(input$urbanization)/100)
+    
+  }
+  
+  future$inventory <- round(as.numeric(future$inventory),0)
+  future$inventory.high <- round(as.numeric(future$inventory.high),0)
+  future$inventory.low <- round(as.numeric(future$inventory.low),0)
+  
+  future_plt <- select(future, year, inventory, inventory.high, inventory.low)
+  
+  future_plt <- tidyr::gather(future_plt, 
+                              key = 'type', 
+                              value = 'forecast', 
+                              -year)
+  
+  future_plt$forecast_div <- future_plt$forecast/1000000000
+  future_plt$bounds <- ifelse(future_plt$type == "inventory", "n", "y")
+  
+  future_plt$bounds <- factor(future_plt$bounds, levels = c("y", "n"))
+  
+  plt <- ggplot(data = future_plt, aes(x = year, y = forecast_div, linetype = bounds, colour = bounds, size = bounds, group = type)) + 
+    geom_line(aes(text = paste0("Year: ", year, "<br>Forecast: ", formattable::comma(forecast)))) +
+    scale_colour_manual(values = c("maroon", "darkgreen")) +
+    scale_linetype_manual(values = c(3,1)) +
+    scale_size_manual(values = c(1,1)) +
+    theme(panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = 'none') +
+    ylab("Inventory (Billions, Cubic Feet)") +
+    xlab("") +
+    scale_y_continuous(limits = c(0,110))
+  
+  
+  ggplotly(plt, tooltip = 'text')
+  
+})
+```
+
+
+Row 
+-----------------------------------------------------------------------
+
+### Current Inventory (2014) by FIA Unit
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+inventory.map <- inv.state.rolled %>%
+  select(STATE_ABBR, EVAL_GRP_YEAR, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+  summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE)) %>%
+  filter(EVAL_GRP_YEAR == 2014)
+
+inventory.map.unit <- inv.unit.rolled %>%
+  select(STATE_ABBR, EVAL_GRP_YEAR, UNIT, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>%
+  summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS)) %>%
+  filter(EVAL_GRP_YEAR == 2014)
+
+colnames(inventory.map)[1] <- "STUSPS"
+
+states_shp <- readOGR("MapFiles", layer = "cb_2016_us_state_500k",
+                      GDAL1_integer64_policy = TRUE, verbose = FALSE)
+
+states.shp <- subset(states_shp, !states_shp$STUSPS %in% c("AK", "GU", "MP", "VI", "AS", "PR", "HI"))
+
+states.shp <- sp::merge(states.shp, inventory.map, by = "STUSPS")
+
+stusps <- as.vector(as.character(states.shp@data$STUSPS))
+
+units_shp <- readOGR("MapFiles", layer = "eastunits",
+                     GDAL1_integer64_policy = TRUE, verbose = FALSE)
+
+units.shp <- sp::merge(units_shp, inventory.map.unit, by = "UNIT")
+units.shp@data <- units.shp@data[complete.cases(units.shp@data),]
+units.shp@data$tot[units.shp@data$tot == 0] <- min(units.shp@data$tot[units.shp@data$tot > 0])-5000
+units.shp@data$tot.log <- log(units.shp@data$tot)
+
+output$inventory_map <- renderLeaflet({
+  
+  id <- as.vector(states.shp@data$STUSPS)
+  
+  leaflet(units.shp, options = leafletOptions(zoomControl = FALSE))%>%
+    addPolygons(color = '#444444', weight = 1, smoothFactor = 0.5,
+                opacity = 1.0, fillOpacity = 0.5,
+                fillColor = ~colorNumeric("YlGn", tot.log)(tot.log)) %>%
+    addPolygons(data = states.shp, layerId = id, color = '#000000', weight = 1, smoothFactor = 0.5,
+                opacity = 1.0, fillOpacity = 0, label = id,
+                highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                    bringToFront = TRUE))
+  
+})
+
+leafletOutput('inventory_map')
+```
+
+
+### Inventory Forecast by State *with 95% Confidence Interval*
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+renderPlotly({
+  
+  st <- as.character(input$inventory_map_shape_click$id)
+  
+  validate(need(try(state.data <-
+                      filter(data, STATE_ABBR == st))
+                , "Click on a state to the left to view the state-level forecast."))
+  
+  state.data <- state.data[, c(1, 2, 5:7)] %>%
+    group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+    summarise_all(funs(sum(., na.rm = TRUE)))
+  
+  state.inv <- inv.state.rolled %>%
+    select(STATE_ABBR, EVAL_GRP_YEAR, SELECT_WHITE_OAK_INV_CUFT_GS) %>%
+    group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+    summarise(tot = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE))
+  
+  state.mod <-
+    merge(state.data, state.inv, by = c("STATE_ABBR", "EVAL_GRP_YEAR"))
+  
+  colnames(state.mod)[3:6] <-
+    c("total.growth",
+      "total.mortality",
+      "total.removal",
+      "inv.gs")
+  
+  state.mod$growth.change <- state.mod$total.growth / state.mod$inv.gs
+  state.mod$mortality.change <- state.mod$total.mortality / state.mod$inv.gs
+  state.mod$removal.change <- state.mod$total.removal / state.mod$inv.gs
+  
+  state.mod <- filter(state.mod, EVAL_GRP_YEAR <= 2014 & EVAL_GRP_YEAR >= 1991)
+  
+  #check for consecutive years
+  state.mod$conesc <- 2
+  
+  for(i in 1:(nrow(state.mod)-1)) {
+    if((state.mod$EVAL_GRP_YEAR[i+1] == (state.mod$EVAL_GRP_YEAR[i]) + 1)) {
+      state.mod$consec[i] <- 0
+    } else {
+      state.mod$consec[i] <- 1
+    }
+  }
+  
+  state.mod$consec[nrow(state.mod)] <- 0 
+  
+  state.mod <- filter(state.mod, consec == 0)
+  
+  # Build model
+  num <- nrow(state.mod)
+  
+  validate(need(try(model_growth_st <- lm(growth.change ~ c(1:num), data = state.mod))
+                , "There is no forecast available for selected state."))
+  model_mortality_st <- lm(mortality.change ~ c(1:num), data = state.mod)
+  model_removal_st <- lm(removal.change ~ c(1:num), data = state.mod)
+  
+  # Store coefficients
+  growth_slope <- coef(model_growth_st)[[2]]
+  mortality_slope <- coef(model_mortality_st)[[2]]
+  removal_slope <- coef(model_removal_st)[[2]]
+  
+  # Store upper and lower bounds
+  growth_slope_upper <- confint(model_growth_st)[4]
+  growth_slope_lower <- confint(model_growth_st)[2]
+  
+  mortality_slope_upper <- confint(model_mortality_st)[4]
+  mortality_slope_lower <- confint(model_mortality_st)[2]
+  
+  removal_slope_upper <- confint(model_removal_st)[4]
+  removal_slope_lower <- confint(model_removal_st)[2]
+  
+  # Use average of 2010 - 2014 as intercept
+  for_int <- filter(state.mod, EVAL_GRP_YEAR >= 2010)
+  growth_int <- mean(for_int$growth.change)
+  mortality_int <- mean(for_int$mortality.change)
+  removal_int <- mean(for_int$removal.change)
+  
+  # Build "forecast" dataframe
+  future_st <- NULL
+  future_st$year <- 2014:2040
+  future_st <- data.frame(future_st)
+  
+  future_st$inventory <- 0
+  future_st$inventory.high <- 0
+  future_st$inventory.low <- 0
+  future_st$growth <- 0
+  future_st$growth.high <- 0
+  future_st$growth.low <- 0
+  future_st$removals <- 0
+  future_st$mortality <- 0
+  future_st$mortality.high <- 0
+  future_st$mortality.low <- 0
+  future_st$urbanization <- 0
+  future_st$urbanization.high <- 0
+  future_st$urbanization.low <- 0
+  
+  # Fill in data for 2014
+  inv_14 <- state.mod %>%
+    filter(EVAL_GRP_YEAR == 2014) %>%
+    select(inv.gs)
+  
+  future_st$inventory[1] <- as.numeric(inv_14[1, 1])
+  future_st$inventory.high[1] <- as.numeric(inv_14[1, 1])
+  future_st$inventory.low[1] <- as.numeric(inv_14[1, 1])
+  future_st$growth[1] <- state.mod$total.growth[nrow(state.mod)]
+  future_st$removals[1] <- state.mod$total.removal[nrow(state.mod)]
+  future_st$mortality[1] <- state.mod$total.mortality[nrow(state.mod)]
+  future_st$growth.high[1] <- state.mod$total.growth[nrow(state.mod)]
+  future_st$mortality.high[1] <- state.mod$total.mortality[nrow(state.mod)]
+  future_st$growth.low[1] <- state.mod$total.growth[nrow(state.mod)]
+  future_st$mortality.low[1] <- state.mod$total.mortality[nrow(state.mod)]
+  
+  # Calculate growth and mortality % "forecast"
+  future_st$dummy <- 0:26
+  
+  future_st$new_growth <- ((future_st$dummy * growth_slope) + growth_int)
+  future_st$new_mortality <- ((future_st$dummy * mortality_slope) + mortality_int)
+  
+  future_st$high_growth <- ((future_st$dummy * growth_slope_upper) + growth_int)
+  future_st$high_mortality <- ((future_st$dummy * mortality_slope_upper) + mortality_int)
+  
+  future_st$low_growth <- ((future_st$dummy * growth_slope_lower) + growth_int)
+  future_st$low_mortality <- ((future_st$dummy * mortality_slope_lower) + mortality_int)
+  
+  # Cannot be negative % of inventory
+  future_st$low_growth <- ifelse(future_st$low_growth <= 0, 0, future_st$low_growth)
+  future_st$low_mortality <- ifelse(future_st$low_mortality <= 0, 0, future_st$low_mortality)
+  future_st$high_growth <- ifelse(future_st$high_growth <= 0, 0, future_st$high_growth)
+  future_st$high_mortality <- ifelse(future_st$high_mortality <= 0, 0, future_st$high_mortality)
+  future_st$new_growth <- ifelse(future_st$new_growth <= 0, 0, future_st$new_growth)
+  future_st$new_mortality <- ifelse(future_st$new_mortality <= 0, 0, future_st$new_mortality)
+  
+  future_st$dummy <- NULL
+  
+  # fill in forecast table row by row
+  for (i in 2:nrow(future_st)) {
+    future_st$inventory[i] <- future_st$inventory[i - 1] + future_st$growth[i - 1] - future_st$removals[i - 1] - future_st$mortality[i - 1] - future_st$urbanization[i - 1]
+    
+    future_st$inventory.high[i] <- future_st$inventory.high[i - 1] + future_st$growth.high[i - 1] - future_st$removals[i - 1] - future_st$mortality.low[i - 1] - future_st$urbanization.high[i - 1]
+    
+    future_st$inventory.low[i] <- future_st$inventory.low[i - 1] + future_st$growth.low[i - 1] - future_st$removals[i - 1] - future_st$mortality.high[i - 1] - future_st$urbanization.low[i - 1]
+    
+    future_st$growth[i] <- future_st$inventory[i] * (future_st$new_growth[i])
+    future_st$growth.high[i] <- future_st$inventory.high[i] * (future_st$high_growth[i])
+    future_st$growth.low[i] <- future_st$inventory.low[i] * (future_st$low_growth[i])
+    
+    future_st$mortality[i] <- future_st$inventory[i] * (future_st$new_mortality[i])
+    future_st$mortality.high[i] <- future_st$inventory.low[i] * (future_st$high_mortality[i])
+    future_st$mortality.low[i] <- future_st$inventory.high[i] * (future_st$low_mortality[i])
+    
+    future_st$removals[i] <- future_st$removals[i - 1] * ((1 + as.numeric(input$removal) / 100))
+    
+    future_st$urbanization[i] <- future_st$inventory[i] * (as.numeric(input$urbanization) / 100)
+    future_st$urbanization.high[i] <- future_st$inventory.high[i] * (as.numeric(input$urbanization) / 100)
+    future_st$urbanization.low[i] <- future_st$inventory.low[i] * (as.numeric(input$urbanization) / 100)
+    
+  }
+  
+  future_st$inventory <- round(as.numeric(future_st$inventory),0)
+  future_st$inventory.high <- round(as.numeric(future_st$inventory.high),0)
+  future_st$inventory.low <- round(as.numeric(future_st$inventory.low),0)  
+  
+  future_plt <- select(future_st, year, inventory, inventory.high, inventory.low)
+  
+  future_plt <- tidyr::gather(future_plt, 
+                              key = 'type', 
+                              value = 'forecast', 
+                              -year)
+  
+  future_plt$forecast_div <- future_plt$forecast/1000000000
+  
+  future_plt$bounds <- ifelse(future_plt$type == "inventory", "n", "y")
+  
+  future_plt$bounds <- factor(future_plt$bounds, levels = c("y", "n"))
+  
+  plt_st <- ggplot(data = future_plt, aes(x = year, y = forecast_div, linetype = bounds, colour = bounds, size = bounds, group = type)) + 
+    geom_line(aes(text = paste0("Year: ", year, "<br>Forecast: ", formattable::comma(forecast)))) +
+    scale_colour_manual(values = c("maroon", "darkgreen")) +
+    scale_linetype_manual(values = c(3,1)) +
+    scale_size_manual(values = c(1,1)) +
+    theme(panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = 'none') +
+    ylab(paste0(unique(state.mod$STATE_ABBR)," Inventory (Billions, Cubic Feet)")) +
+    xlab("")
+  
+  ggplotly(plt_st, tooltip = 'text')
+  
+})
+```
+
+
+Forecast Data
+=======================================================================
+
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+
+\
+
+The data displayed to the right includes the values selected for Annual increase in Removal and/or Urbanization from the prior tabs. 
+
+\
+
+
+```{r}
+selectInput("forecast_type", label = "Please select which forecast you would like to view:", choices = c("Forecast", "Alternate Forecast"), selected = "Forecast")
+```
+
+Enter Brown-Forman's demand for White Oak in the year `r max(data$EVAL_GRP_YEAR)-3`:
+
+\
+
+```{r}
+numericInput("demand", label = paste0("Brown-Forman ", max(data$EVAL_GRP_YEAR)-3," Demand:"), 360000, min = 0, max = 1000000000)
+```
+
+\
+
+Use the sliding bar below to adjust the increase in Annual Demand to analyze the portion of Total Inventory and Total Removal that B-F Demand occupies.
+
+```{r}
+tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: green}"))
+
+sliderInput("bf_demand", label = "Brown-Forman Annual Demand Increase (%):",
+            min = 0.0, max = 20.0, value = 10.0, step = 0.5)
+```
+
+Row
+-----------------------------------------------------------------------
+
+```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
+renderTable({
+  
+  if (input$forecast_type == "Alternate Forecast") {  
+    
+    future$demand[1] <- as.numeric(input$demand)
+    future$`demand % of inventory` <- (future$demand[1]/future$inventory[1])*100
+    future$`demand % of removals` <- (future$demand[1]/future$removals[1])*100
+    
+    # fill in forecast table row by row
+    for (i in 2:nrow(future)) {
+      future$inventory[i] <- future$inventory[i-1] + future$growth[i-1] - future$removals[i-1] - future$mortality[i-1] - future$urbanization[i-1]
+      
+      future$inventory.high[i] <- future$inventory.high[i-1] + future$growth.high[i-1] - future$removals[i-1] - future$mortality.low[i-1] - future$urbanization.high[i-1]
+      
+      future$inventory.low[i] <- future$inventory.low[i-1] + future$growth.low[i-1] - future$removals[i-1] - future$mortality.high[i-1] - future$urbanization.low[i-1]
+      
+      future$growth[i] <- future$inventory[i]*(future$new_growth[i])
+      future$growth.high[i] <- future$inventory.high[i]*(future$high_growth[i])
+      future$growth.low[i] <- future$inventory.low[i]*(future$low_growth[i])
+      
+      future$mortality[i] <- future$inventory[i]*(future$new_mortality[i])
+      future$mortality.high[i] <- future$inventory.low[i]*(future$high_mortality[i])
+      future$mortality.low[i] <- future$inventory.high[i]*(future$low_mortality[i])
+      
+      future$removals[i] <- future$removals[i-1]*((1 + as.numeric(input$removal)/100))
+      
+      future$urbanization[i] <- future$inventory[i]*(as.numeric(input$urbanization)/100)
+      future$urbanization.high[i] <- future$inventory.high[i]*(as.numeric(input$urbanization)/100)
+      future$urbanization.low[i] <- future$inventory.low[i]*(as.numeric(input$urbanization)/100)
+      
+      future$demand[i] <- future$demand[i-1]*(1+(as.numeric(input$bf_demand)/100))
+      future$`demand % of inventory`[i] <- (future$demand[i]/future$inventory[i])*100
+      future$`demand % of removals`[i] <- (future$demand[i]/future$removals[i])*100
+      
+    }
+    
+    future <- select(future, year, inventory, growth, removals, mortality, demand, `demand % of inventory`, `demand % of removals`)
+    future$inventory <- round(formattable::comma(as.numeric(future$inventory),0))
+    future$growth <- round(formattable::comma(as.numeric(future$growth),0))
+    future$removals <- round(formattable::comma(as.numeric(future$removals),0))
+    future$mortality <- round(formattable::comma(as.numeric(future$mortality),0))
+    future$demand <- round(formattable::comma(as.numeric(future$demand),0))
+    future$`demand % of inventory` <- formattable::percent(future$`demand % of inventory`, digits = 3)
+    future$`demand % of removals` <- formattable::percent(future$`demand % of removals`, digits = 3)
+    colnames(future) <- c("Year", "Inventory", "Growth", "Removals", "Mortality", "Demand", "Demand % of Inventory", "Demand % of Removals")
+    future
+    
+  } else {
+    
+    future_alt$demand[1] <- as.numeric(input$demand)
+    future_alt$`demand % of inventory` <- (future_alt$demand[1]/future_alt$inventory[1])*100
+    future_alt$`demand % of removals` <- (future_alt$demand[1]/future_alt$removals[1])*100
+    
+    # fill in forecast table row by row
+    for (i in 2:nrow(future_alt)) {
+      # Inventory = Inventory + Growth - Removal - Mortality - Urbanization  
+      future_alt$inventory[i] <- future_alt$inventory[i-1] + future_alt$growth[i-1] - future_alt$removals[i-1] - future_alt$mortality[i-1] - future_alt$urbanization[i-1]
+      
+      # Upper Bound Inventory = Upper Bound Inventory + High Growth - Low Removal - Low Mortality - High Urbanization (i.e. the Urbanization calculated from the High Inventory)
+      future_alt$inventory.high[i] <- future_alt$inventory.high[i-1] + future_alt$growth.high[i-1] - future_alt$removal.low[i-1] - future_alt$mortality.low[i-1] - future_alt$urbanization.high[i-1]
+      
+      # Lower Bound Inventory = Lower Bound Inventory + Low Growth - High Removal - High Mortality - Low Urbanization (i.e. the Urbanization calculated from the Low Inventory)
+      future_alt$inventory.low[i] <- future_alt$inventory.low[i-1] + future_alt$growth.low[i-1] - future_alt$removal.high[i-1] - future_alt$mortality.high[i-1] - future_alt$urbanization.low[i-1]
+      
+      future_alt$growth[i] <- future_alt$inventory[i]*(future_alt$new_growth[i])    
+      future_alt$growth.high[i] <- future_alt$inventory.high[i]*(future_alt$high_growth[i])
+      future_alt$growth.low[i] <- future_alt$inventory.low[i]*(future_alt$low_growth[i])
+      
+      future_alt$mortality[i] <- future_alt$inventory[i]*(future_alt$new_mortality[i])
+      future_alt$mortality.high[i] <- future_alt$inventory.low[i]*(future_alt$high_mortality[i])
+      future_alt$mortality.low[i] <- future_alt$inventory.high[i]*(future_alt$low_mortality[i])
+      
+      future_alt$removals[i] <- future_alt$inventory[i]*future_alt$new_removal[i]
+      future_alt$removal.high[i] <- future_alt$inventory.low[i]*future_alt$high_removal[i]
+      future_alt$removal.low[i] <- future_alt$inventory.high[i]*future_alt$low_removal[i]
+      
+      future_alt$urbanization[i] <- future_alt$inventory[i]*(as.numeric(input$urbanization2)/100)
+      future_alt$urbanization.high[i] <- future_alt$inventory.high[i]*(as.numeric(input$urbanization2)/100)
+      future_alt$urbanization.low[i] <- future_alt$inventory.low[i]*(as.numeric(input$urbanization2)/100)
+      
+      future_alt$demand[i] <- future_alt$demand[i-1]*(1+(as.numeric(input$bf_demand)/100))
+      future_alt$`demand % of inventory`[i] <- (future_alt$demand[i]/future_alt$inventory[i])*100
+      future_alt$`demand % of removals`[i] <- (future_alt$demand[i]/future_alt$removals[i])*100
+    }
+    
+    future_alt <- select(future_alt, year, inventory, growth, removals, mortality, demand, `demand % of inventory`, `demand % of removals`)
+    future_alt$inventory <- round(formattable::comma(as.numeric(future_alt$inventory),0))
+    future_alt$growth <- round(formattable::comma(as.numeric(future_alt$growth),0))
+    future_alt$removals <- round(formattable::comma(as.numeric(future_alt$removals),0))
+    future_alt$mortality <- round(formattable::comma(as.numeric(future_alt$mortality),0))
+    future_alt$demand <- round(formattable::comma(as.numeric(future_alt$demand),0))
+    future_alt$`demand % of inventory` <- formattable::percent(future_alt$`demand % of inventory`, digits = 3)
+    future_alt$`demand % of removals` <- formattable::percent(future_alt$`demand % of removals`, digits = 3)
+    colnames(future_alt) <- c("Year", "Inventory", "Growth", "Removals", "Mortality", "Demand", "Demand % of Inventory", "Demand % of Removals")
+    future_alt
+    
+  }
+  
+})
+```
 
 Simulation
 =======================================================================
 ```{r}
-# Read in state shape file
-states_shp <- readOGR("MapFiles", layer = "national_forestry_service_regions",
-                      GDAL1_integer64_policy = TRUE, verbose = FALSE)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(tibbletime)
+library(corrplot)
+library(utf8)
+library(stringr)
+library(lmtest)
+library(car)
+library(gvlma)
+library(sandwich)
+library(forecast)
+```
+
+```{r echo = FALSE}
+inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
+inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
+inv33 <- read_csv("WhiteOakData/white_oak_inv_33.csv")
+
+inventory <- rbind(inv23, inv24, inv33)
+
+inventory[is.na(inventory)] <- 0
+
+inventory$UNIT <- paste0(inventory$STATECD, "0", inventory$UNITCD)
+
+oak <- read_csv("WhiteOakData/white-oak-clean.csv")
+oak[is.na(oak)] <- 0
+
+oak_merge <- oak %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>%
+  summarise(total_removal = sum(SELECT_WHITE_OAK_REMOVAL, na.rm = TRUE),
+            total_growth = sum(SELECT_WHITE_OAK_GROWTH, na.rm = TRUE),
+            total_mortality = sum(SELECT_WHITE_OAK_MORTALITY, na.rm = TRUE)) %>%
+  mutate(total_growth_true = total_growth + total_mortality)
+
+oak_merge$total_growth <- NULL
+colnames(oak_merge)[6] <- "total_growth"
+
+inventory_merge <- inventory %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR, UNIT) %>%
+  summarise(total_inventory = sum(SELECT_WHITE_OAK_INV_CUFT_GS, na.rm = TRUE),
+            total_hardwood = sum(TOTAL_HARDWOOD_INV_CUFT_GS, na.rm = TRUE))
+
+oak_total <- merge(oak_merge, inventory_merge, by = c("STATE_ABBR", "EVAL_GRP_YEAR", "UNIT"))
+
+fire <- read_csv("fire_data.csv")
+colnames(fire) <- c("STATE_ABBR", "num_fires", "acres_burned", "EVAL_GRP_YEAR")
+
+mod.dat <- oak_total %>%
+  group_by(STATE_ABBR, EVAL_GRP_YEAR) %>%
+  summarise(total_removal = sum(total_removal),
+            total_growth = sum(total_growth),
+            total_mortality = sum(total_mortality),
+            total_inventory = sum(total_inventory),
+            total_hardwood = sum(total_hardwood))
+
+r9 <- c("MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH", "WV", "PA", "NJ", "DE", "MD", "NY", "CT", "RI", "MA", "VT", "NH", "ME")
+
+r2 <- c("ND", "SD", "NE", "KS")
+
+r8 <- c("TX", "OK", "LA", "AR", "MS", "AL", "GA", "FL", "TN", "KY", "VA", "NC", "SC")
+
+mod.dat$region <- ifelse(mod.dat$STATE_ABBR %in% r9, "R9",
+                         ifelse(mod.dat$STATE_ABBR %in% r8, "R8",
+                                ifelse(mod.dat$STATE_ABBR %in% r2, "R2", "NA")))
+
+write_csv(mod.dat, "mod_dat_final.csv")
+
+
+pdsi_states <- read_csv("pdsi_states.csv")
+
+pest_output <- read_csv("pest_output.csv")
+pest_merge <- merge(pest_output, pdsi_states, by = "State")
+colnames(pest_merge)[5] <- "STATE_ABBR"
+pest_merge$region <- ifelse(pest_merge$STATE_ABBR %in% r9, "R9",
+                         ifelse(pest_merge$STATE_ABBR %in% r8, "R8",
+                                ifelse(pest_merge$STATE_ABBR %in% r2, "R2", "NA")))
+
+state_land_area <- read_csv("state_land_area.csv")
+
+state_land_area <- separate(data = state_land_area, col = `State`, into = c("State", "Other"), sep = " flag")
+state_land_area <- separate(data = state_land_area, col = `Land Area (sq mi)`, into = c("land_area", "other"), sep = "\\.")
+state_land_area <- state_land_area %>%
+  select(State, land_area)
+
+state_land_area$land_area <- gsub(",", "", state_land_area$land_area)
+state_land_area$land_area2 <- as.numeric(state_land_area$land_area)
+state_land_area$land_area <- state_land_area$land_area2
+state_land_area$land_area2 <- NULL
+
+state_land_area_merge <- merge(state_land_area, pdsi_states, by = c("State")) %>%
+  mutate(land_area_acres = land_area*640)
+
+state_land_area_merge$land_area <- NULL
+state_land_area_merge$State <- NULL
+
+colnames(state_land_area_merge) <- c("STATE_ABBR", "land_area_acres")
+
+r9 <- c("MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH", "WV", "PA", "NJ", "DE", "MD", "NY", "CT", "RI", "MA", "VT", "NH", "ME")
+
+r2 <- c("ND", "SD", "NE", "KS")
+
+r8 <- c("TX", "OK", "LA", "AR", "MS", "AL", "GA", "FL", "TN", "KY", "VA", "NC", "SC")
+
+state_land_area_merge$region <- ifelse(state_land_area_merge$STATE_ABBR %in% r9, "R9",
+                         ifelse(state_land_area_merge$STATE_ABBR %in% r8, "R8",
+                                ifelse(state_land_area_merge$STATE_ABBR %in% r2, "R2", "NA")))
+
+state_land_area_reg <- state_land_area_merge %>%
+  group_by(region) %>%
+  summarise(land_area_acres = sum(land_area_acres))
+
+```
+
+```{r echo = FALSE}
+
+# catastrophic_fires <- read_csv("catastrophic_fires.csv")
+# 
+# catastrophic_fires <- mutate(catastrophic_fires,
+#                              cu_ft_burned = acres_burned*43560)
+# 
+# state_land_area <- read_csv("state_land_area.csv")
+# 
+# state_land_area <- separate(data = state_land_area, col = `State`, into = c("State", "Other"), sep = " flag")
+# state_land_area <- separate(data = state_land_area, col = `Land Area (sq mi)`, into = c("land_area", "other"), sep = "\\.")
+# state_land_area <- state_land_area %>%
+#   select(State, land_area)
+# 
+# state_land_area$land_area <- gsub(",", "", state_land_area$land_area)
+# state_land_area$land_area2 <- as.numeric(state_land_area$land_area)
+# state_land_area$land_area <- state_land_area$land_area2
+# state_land_area$land_area2 <- NULL
+# 
+
+# 
+# state_land_area_merge <- merge(state_land_area, pdsi_states, by = c("State")) %>%
+#   mutate(land_area_acres = land_area*640)
+# 
+# state_land_area_merge$land_area <- NULL
+# state_land_area_merge$State <- NULL
+# 
+# colnames(state_land_area_merge) <- c("STATE_ABBR", "land_area_acres")
+# 
+# r9 <- c("MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH", "WV", "PA", "NJ", "DE", "MD", "NY", "CT", "RI", "MA", "VT", "NH", "ME")
+# 
+# r2 <- c("ND", "SD", "NE", "KS")
+# 
+# r8 <- c("TX", "OK", "LA", "AR", "MS", "AL", "GA", "FL", "TN", "KY", "VA", "NC", "SC")
+# 
+# state_land_area_merge$region <- ifelse(state_land_area_merge$STATE_ABBR %in% r9, "R9",
+#                          ifelse(state_land_area_merge$STATE_ABBR %in% r8, "R8",
+#                                 ifelse(state_land_area_merge$STATE_ABBR %in% r2, "R2", "NA")))
+# 
+# catastrophic_fires$region <- ifelse(catastrophic_fires$STATE_ABBR %in% r9, "R9",
+#                          ifelse(catastrophic_fires$STATE_ABBR %in% r8, "R8",
+#                                 ifelse(catastrophic_fires$STATE_ABBR %in% r2, "R2", "NA")))
+# 
+# state_land_area_reg <- state_land_area_merge %>%
+#   group_by(region) %>%
+#   summarise(land_area_acres = sum(land_area_acres))
+# 
+# catastrophic_fires <- catastrophic_fires %>%
+#   filter(region != "NA",
+#          EVAL_GRP_YEAR <= 2014) %>%
+#   merge(., state_land_area_reg, by = "region")
+# 
+# catastrophic_fires <- mutate(catastrophic_fires,
+#                              pct_area_burned = (acres_burned / land_area_acres))
+
+# mod.dat$region <- ifelse(mod.dat$STATE_ABBR %in% r9, "R9",
+#                          ifelse(mod.dat$STATE_ABBR %in% r8, "R8",
+#                                 ifelse(mod.dat$STATE_ABBR %in% r2, "R2", "NA")))
+
+
+
+pest_merge <- read_csv("pest_final.csv")
+
+pest_r8 <- pest_merge %>% 
+  filter(region == "R8") %>% 
+  group_by(Year) %>% 
+  summarise(total_acres = sum(Acres))
+
+pest_r9 <- pest_merge %>% 
+  filter(region == "R9") %>% 
+  group_by(Year) %>% 
+  summarise(total_acres = sum(Acres))
+
+pest_r2 <- pest_merge %>% 
+  filter(region == "R2") %>% 
+  group_by(Year) %>% 
+  summarise(total_acres = sum(Acres))
+
+
+# How many times was the pest volume in each region greater than the region's average? (a potential way to quatify the  more rare outbreaks)
+
+pest_r9$outbreak <- ifelse(pest_r9$total_acres > mean(pest_r9$total_acres), 1, 0)
+pest_r8$outbreak <- ifelse(pest_r8$total_acres > mean(pest_r8$total_acres), 1, 0)
+pest_r2$outbreak <- ifelse(pest_r2$total_acres > mean(pest_r2$total_acres), 1, 0)
+
+pest_inv <- mod.dat %>% 
+  filter(EVAL_GRP_YEAR == 2014) %>% 
+  group_by(EVAL_GRP_YEAR, region) %>% 
+  summarise(total_hardwood = sum(total_hardwood, na.rm = TRUE))
+
+pest_r2$reg_acres <- state_land_area_reg$land_area_acres[state_land_area_reg$region == "R2"]
+pest_r9$reg_acres <- state_land_area_reg$land_area_acres[state_land_area_reg$region == "R9"]
+pest_r8$reg_acres <- state_land_area_reg$land_area_acres[state_land_area_reg$region == "R8"]
+
+pest_r2$pct_acres <- pest_r2$total_acres/pest_r2$reg_acres
+pest_r9$pct_acres <- pest_r9$total_acres/pest_r9$reg_acres
+pest_r8$pct_acres <- pest_r8$total_acres/pest_r8$reg_acres
+
+# How often was the state/region in severe drought? 
+
+drought_monitor <- read_csv("drought_monitor.csv")
+drought_monitor$year <- str_sub(drought_monitor$ReleaseDate, 1, 4)
+colnames(drought_monitor)[2] <- "STATE_ABBR"
+
+
+drought_monitor$region <- ifelse(drought_monitor$STATE_ABBR %in% r9, "R9",
+                         ifelse(drought_monitor$STATE_ABBR %in% r8, "R8",
+                                ifelse(drought_monitor$STATE_ABBR %in% r2, "R2", "NA")))
+
+drought_monitor_reg <- drought_monitor %>%
+  group_by(region, year) %>%
+  filter(region != "NA") %>%
+  summarise(total_d4 = sum(as.numeric(D4), na.rm = TRUE),
+            total_d3 = sum(as.numeric(D3), na.rm = TRUE))
+
+tornado_dat <- read_csv("Tornado/Consolidated_Tornados_50_16.csv")
+
+colnames(tornado_dat)[2] <- "STATE_ABBR"
+tornado_dat$region <- ifelse(tornado_dat$STATE_ABBR %in% r9, "R9",
+                         ifelse(tornado_dat$STATE_ABBR %in% r8, "R8",
+                                ifelse(tornado_dat$STATE_ABBR %in% r2, "R2", "NA")))
+
+tornado_dat_5 <- tornado_dat %>% 
+  filter(magnitude == 5) %>% 
+  group_by(region, year) %>% 
+  summarise(acres_destroyed = sum(acres))
+
+tornado_2 <- tornado_dat_5 %>% 
+  filter(region == "R2") %>% 
+  mutate(region_acres = state_land_area_reg$land_area_acres[state_land_area_reg$region == "R2"],
+         pct_acres = acres_destroyed/region_acres)
+
+tornado_9 <- tornado_dat_5 %>% 
+  filter(region == "R9") %>% 
+  mutate(region_acres = state_land_area_reg$land_area_acres[state_land_area_reg$region == "R9"],
+         pct_acres = acres_destroyed/region_acres)
+
+tornado_8 <- tornado_dat_5 %>% 
+  filter(region == "R8") %>% 
+  mutate(region_acres = state_land_area_reg$land_area_acres[state_land_area_reg$region == "R8"],
+         pct_acres = acres_destroyed/region_acres)
+
+#mod.dat <- read_csv("mod_dat_final.csv")
+#catastrophic_fires <- read_csv("cat_fires_final.csv")
+
+more_fire <- read_csv("more_fire_final.csv")
+
+fire_inv <- mod.dat  %>% 
+  filter(EVAL_GRP_YEAR == 2014) %>% 
+  group_by(EVAL_GRP_YEAR, region) %>% 
+  summarise(total_inv = sum(total_inventory, na.rm = TRUE))
+
+fire_r8_df <- more_fire %>% 
+  filter(region == "R8") %>% 
+  group_by(FIRE_YEAR) %>% 
+  summarise(total_acres = sum(tot_acres))
+
+fire_r9_df <- more_fire %>% 
+  filter(region == "R9") %>% 
+  group_by(FIRE_YEAR) %>% 
+  summarise(total_acres = sum(tot_acres))
+
+fire_r2_df <- more_fire %>% 
+  filter(region == "R2") %>% 
+  group_by(FIRE_YEAR) %>% 
+  summarise(total_acres = sum(tot_acres))
+
+fire_r2_df$reg_acres <- fire_inv$total_inv[fire_inv$region == "R2"]
+fire_r9_df$reg_acres <- fire_inv$total_inv[fire_inv$region == "R9"]
+fire_r8_df$reg_acres <- fire_inv$total_inv[fire_inv$region == "R8"]
+
+fire_r2_df$pct_acres <- fire_r2_df$total_acres/fire_r2_df$reg_acres
+fire_r9_df$pct_acres <- fire_r9_df$total_acres/fire_r9_df$reg_acres
+fire_r8_df$pct_acres <- fire_r8_df$total_acres/fire_r8_df$reg_acres
+
+## Urbanized land 2050
+
+pct_urban <- read_csv("percent-forestland-urban.csv")
+
+# weight by state percent of WO in region
+
+region_weights <- mod.dat %>% 
+  filter(EVAL_GRP_YEAR == 2014) %>% 
+  group_by(STATE_ABBR, region) %>% 
+  summarise(total_inventory = sum(total_inventory))
+
+region_weights$region_total <- ifelse(region_weights$region == "R9", sum(region_weights$total_inventory[region_weights$region == "R9"]), ifelse(region_weights$region == "R8", sum(region_weights$total_inventory[region_weights$region == "R8"]), sum(region_weights$total_inventory[region_weights$region == "R2"])))
+
+region_weights$WO_pct_region <- region_weights$total_inventory/region_weights$region_total
+
+colnames(pct_urban)[1] <- "STATE_ABBR"
+
+pct_urban_final <- merge(pct_urban, region_weights, by = "STATE_ABBR") %>% 
+  mutate(mult_weight = pct_forestland_urban_2050 * WO_pct_region) %>% 
+  group_by(region) %>% 
+  summarise(weight_sum = sum(WO_pct_region),
+            weighted_pct = sum(mult_weight)) %>% 
+  mutate(weighted_avg = weighted_pct / weight_sum)
 
 
 
 
+mod.dat.r9 <- mod.dat %>% 
+  filter(region == "R9") %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(total_inventory),
+            total_mortality = sum(total_mortality),
+            total_removal = sum(as.numeric(total_removal)),
+            total_growth = sum(as.numeric(total_growth)))
+
+mod.dat.r8 <- mod.dat %>% 
+  filter(region == "R8") %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(total_inventory),
+            total_mortality = sum(total_mortality),
+            total_removal = sum(as.numeric(total_removal)),
+            total_growth = sum(as.numeric(total_growth)))
+
+mod.dat.r2 <- mod.dat %>% 
+  filter(region == "R2") %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(total_inventory),
+            total_mortality = sum(total_mortality),
+            total_removal = sum(as.numeric(total_removal)),
+            total_growth = sum(as.numeric(total_growth)))
 
 
 ```
 
+In the simulation outline below, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain rate of change values the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include a yearly shock value to provide a simple example of how we can incorporate the outside variables like wildfire, pests, drought, etc. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
 
+```{r evaluate = FALSE}
+
+# Calculate growth, removal, mortality percent of inventory
+mod.dat.r9 <- mod.dat.r9 %>% 
+  mutate(growth.pct = total_growth/total_inventory,
+         remv.pct = total_removal/total_inventory, 
+         mort.pct = total_mortality/total_inventory)
+
+mod.dat.r8 <- mod.dat.r8 %>% 
+  mutate(growth.pct = total_growth/total_inventory,
+         remv.pct = total_removal/total_inventory, 
+         mort.pct = total_mortality/total_inventory)
+
+mod.dat.r2 <- mod.dat.r2 %>% 
+  mutate(growth.pct = total_growth/total_inventory,
+         remv.pct = total_removal/total_inventory, 
+         mort.pct = total_mortality/total_inventory)
+
+# Filter to 2002 to 2014 for consistency in measurement method
+
+mod.dat.r9 <- filter(mod.dat.r9, EVAL_GRP_YEAR >= 2002 & EVAL_GRP_YEAR <= 2014)
+mod.dat.r8 <- filter(mod.dat.r8, EVAL_GRP_YEAR >= 2002 & EVAL_GRP_YEAR <= 2014)
+mod.dat.r2 <- filter(mod.dat.r2, EVAL_GRP_YEAR >= 2002 & EVAL_GRP_YEAR <= 2014)
+
+# Build linear models for each and save summary stats
+growth.mod.r9 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
+growth.summary.r9 <- summary(growth.mod.r9)
+mort.mod.r9 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
+mort.summary.r9 <- summary(mort.mod.r9)
+remv.mod.r9 <- lm(remv.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
+remv.summary.r9 <- summary(remv.mod.r9)
+
+growth.mod.r8 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
+growth.summary.r8 <- summary(growth.mod.r8)
+mort.mod.r8 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
+mort.summary.r8 <- summary(mort.mod.r8)
+remv.mod.r8 <- lm(remv.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
+remv.summary.r8 <- summary(remv.mod.r8)
+
+growth.mod.r2 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
+growth.summary.r2 <- summary(growth.mod.r2)
+mort.mod.r2 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
+mort.summary.r2 <- summary(mort.mod.r2)
+remv.mod.r2 <- lm(remv.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
+remv.summary.r2 <- summary(remv.mod.r2)
+
+# Check Assumptions
+
+# Independence of Errors (Autocorrelation)
+
+# Breusch Godfrey test
+bgtest(remv.mod.r2) # fail to reject
+bgtest(remv.mod.r9) # fail to reject
+bgtest(remv.mod.r8) # fail to reject
+bgtest(mort.mod.r2) # fail to reject
+bgtest(mort.mod.r9) # fail to reject
+bgtest(mort.mod.r8) # fail to reject
+bgtest(growth.mod.r2) # fail to reject
+bgtest(growth.mod.r9) # fail to reject
+bgtest(growth.mod.r8) # fail to reject
+
+# Ljung Box Test
+Box.test(remv.mod.r2$residuals, type="Ljung-Box") # fail to reject
+Box.test(remv.mod.r9$residuals, type="Ljung-Box") # fail to reject
+Box.test(remv.mod.r8$residuals, type="Ljung-Box") # fail to reject
+Box.test(mort.mod.r2$residuals, type="Ljung-Box") # fail to reject
+Box.test(mort.mod.r9$residuals, type="Ljung-Box") # fail to reject
+Box.test(mort.mod.r8$residuals, type="Ljung-Box") # fail to reject
+Box.test(growth.mod.r2$residuals, type="Ljung-Box") # fail to reject
+Box.test(growth.mod.r9$residuals, type="Ljung-Box") # fail to reject
+Box.test(growth.mod.r8$residuals, type="Ljung-Box") # fail to reject
+
+# Heteroscedasticity
+
+# Breusch Pagan test
+
+bptest(growth.mod.r9) # fail to reject
+bptest(growth.mod.r8) # fail to reject
+bptest(growth.mod.r2) # fail to reject
+bptest(mort.mod.r9) # fail to reject
+bptest(mort.mod.r8) # fail to reject
+bptest(mort.mod.r2) # fail to reject 
+bptest(remv.mod.r9) # fail to reject
+bptest(remv.mod.r8) # reject the null
+bptest(remv.mod.r2) # reject the null
+
+# Normality
+shapiro.test(growth.mod.r9$residuals) # fail to reject
+shapiro.test(growth.mod.r8$residuals) # fail to reject
+shapiro.test(growth.mod.r2$residuals) # fail to reject
+shapiro.test(mort.mod.r9$residuals) # fail to reject
+shapiro.test(mort.mod.r8$residuals) # fail to reject
+shapiro.test(mort.mod.r2$residuals) # fail to reject 
+shapiro.test(remv.mod.r9$residuals) # fail to reject
+shapiro.test(remv.mod.r8$residuals) # fail to reject
+shapiro.test(remv.mod.r2$residuals) # fail to reject
+
+# Mean of errors is 0
+mean(growth.mod.r9$residuals) # true
+mean(growth.mod.r8$residuals) # true
+mean(growth.mod.r2$residuals) # true
+mean(mort.mod.r9$residuals) # true
+mean(mort.mod.r8$residuals) # true
+mean(mort.mod.r2$residuals) # true
+mean(remv.mod.r9$residuals) # true
+mean(remv.mod.r8$residuals) # true
+mean(remv.mod.r2$residuals) # true
+
+# Check Residuals
+
+
+
+
+# Fix heteroscedasticity problems
+remv.mod.r8$newse <- vcovHC(remv.mod.r8, type="HC3")
+remv.summary.r8 <- coeftest(remv.mod.r8, remv.mod.r8$newse)
+remv.mod.r2$newse <- vcovHC(remv.mod.r2, type="HC3")
+remv.summary.r2 <- coeftest(remv.mod.r2, remv.mod.r2$newse)
+
+```
+
+```{r evaluate = FALSE}
+
+years <- 2014:2064
+
+# Build simulation function
+run_sim <- function() {
+  # Define forecast period
+  inv <- 0
+  df <- tibble(year = years, inventory.r9 = inv, inventory.r8 = inv, inventory.r2 = inv, total_inventory = inv, new_growth_pct_r9 = inv, new_growth_pct_r8 = inv, new_remv_pct_r8 = inv, new_mort_pct_r2 = inv, new_mort_pct_r8 = inv)
+  
+  # Initial inventory equal to 2014 inventory
+  df$inventory.r9[df$year == 2014] <- mod.dat.r9$total_inventory[nrow(mod.dat.r9)]
+  df$inventory.r8[df$year == 2014] <- mod.dat.r8$total_inventory[nrow(mod.dat.r8)]
+  df$inventory.r2[df$year == 2014] <- mod.dat.r2$total_inventory[nrow(mod.dat.r2)]
+  
+  df$new_growth_pct_r8[df$year == 2014] <- mod.dat.r8$growth.pct[nrow(mod.dat.r8)]
+  df$new_growth_pct_r9[df$year == 2014] <- mod.dat.r9$growth.pct[nrow(mod.dat.r9)]
+  df$new_mort_pct_r8[df$year == 2014] <- mod.dat.r8$mort.pct[nrow(mod.dat.r8)]
+  df$new_mort_pct_r2[df$year == 2014] <- mod.dat.r2$mort.pct[nrow(mod.dat.r2)]
+  df$new_remv_pct_r8[df$year == 2014] <- mod.dat.r8$remv.pct[nrow(mod.dat.r8)]
+  
+  # Build the normal distributions for growth, mortality, removal
+  growth_dist_r9 <- rnorm(100, growth.mod.r9$coefficients[[2]], growth.summary.r9$coefficients[[4]])
+  mortality_dist_r9 <- rnorm(100, mort.mod.r9$coefficients[[2]], mort.summary.r9$coefficients[[4]])
+  removal_dist_r9 <- rnorm(100, remv.mod.r9$coefficients[[2]], remv.summary.r9$coefficients[[4]])
+  
+  growth_dist_r8 <- rnorm(100, growth.mod.r8$coefficients[[2]], growth.summary.r8$coefficients[[4]])
+  mortality_dist_r8 <- rnorm(100, mort.mod.r8$coefficients[[2]], mort.summary.r8$coefficients[[4]])
+  removal_dist_r8 <- rnorm(100, remv.mod.r8$coefficients[[2]], remv.summary.r8[[4]])
+
+  growth_dist_r2 <- rnorm(100, growth.mod.r2$coefficients[[2]], growth.summary.r2$coefficients[[4]])
+  mortality_dist_r2 <- rnorm(100, mort.mod.r2$coefficients[[2]], mort.summary.r2$coefficients[[4]])
+  removal_dist_r2 <- rnorm(100, remv.mod.r2$coefficients[[2]], remv.summary.r2[[4]])
+  
+  # Build additional distributions for the models containing lagged variables
+  # removal_lag_dist_r8 <- rnorm(100, remv.mod.r8$coefficients[[3]], remv.summary.r8[[6]])
+  # mortality_lag_dist_r8 <- rnorm(100, mort.mod.r8$coefficients[[3]], mort.summary.r8$coefficients[[6]])
+  # mortality_lag_dist_r2 <- rnorm(100, mort.mod.r2$coefficients[[3]], mort.summary.r2$coefficients[[6]])
+  # growth_lag_dist_r8 <- rnorm(100, growth.mod.r8$coefficients[[3]], growth.summary.r8$coefficients[[6]])
+  # growth_lag_dist_r9 <- rnorm(100, growth.mod.r9$coefficients[[3]], growth.summary.r9[[6]])
+  
+  # Define rate of change by sampling from distributions created above. We want the rate of change to be the same over the entire forecasted time period, but different for each simulation. This is why we define it prior to the while loop below.
+  growth_roc_r9 <- base::sample(growth_dist_r9, 1)
+  mortality_roc_r9 <- base::sample(mortality_dist_r9, 1)
+  removal_roc_r9 <- base::sample(removal_dist_r9, 1)
+  
+  growth_roc_r8 <- base::sample(growth_dist_r8, 1)
+  mortality_roc_r8 <- base::sample(mortality_dist_r8, 1)
+  removal_roc_r8 <- base::sample(removal_dist_r8, 1)
+  
+  growth_roc_r2 <- base::sample(growth_dist_r2, 1)
+  mortality_roc_r2 <- base::sample(mortality_dist_r2, 1)
+  removal_roc_r2 <- base::sample(removal_dist_r2, 1)
+  
+  # growth_lag_roc_r8 <- growth.mod.r8$coefficients[[3]]
+  # growth_lag_roc_r9 <- growth.mod.r9$coefficients[[3]]
+  # mortality_lag_roc_r2 <- mort.mod.r2$coefficients[[3]]
+  # mortality_lag_roc_r8 <- mort.mod.r8$coefficients[[3]]
+  # removal_lag_roc_r8 <- remv.mod.r8$coefficients[[3]]
+  
+  # Define rate of change for lagged variables
+  # growth_lag_roc_r9 <- base::sample(growth_lag_dist_r9, 1)
+  # growth_lag_roc_r8 <- base::sample(growth_lag_dist_r8, 1)
+  # mortality_lag_roc_r8 <- base::sample(mortality_lag_dist_r8, 1)
+  # mortality_lag_roc_r2 <- base::sample(mortality_lag_dist_r2, 1)
+  # removal_lag_roc_r8 <- base::sample(removal_lag_dist_r8, 1)
+  
+  y <- 2015
+  
+  # Define intercepts by taking the average of the last 5 years for growth, removal, mortality percent of inventory
+  growth_int_r9 <- mean(mod.dat.r9$growth.pct[(nrow(mod.dat.r9)-5):nrow(mod.dat.r9)])
+  mortality_int_r9 <- mean(mod.dat.r9$mort.pct[(nrow(mod.dat.r9)-5):nrow(mod.dat.r9)])
+  removal_int_r9 <- mean(mod.dat.r9$remv.pct[(nrow(mod.dat.r9)-5):nrow(mod.dat.r9)])
+  
+  growth_int_r8 <- mean(mod.dat.r8$growth.pct[(nrow(mod.dat.r8)-5):nrow(mod.dat.r8)])
+  mortality_int_r8 <- mean(mod.dat.r8$mort.pct[(nrow(mod.dat.r8)-5):nrow(mod.dat.r8)])
+  removal_int_r8 <- mean(mod.dat.r8$remv.pct[(nrow(mod.dat.r8)-5):nrow(mod.dat.r8)])
+  
+  growth_int_r2 <- mean(mod.dat.r2$growth.pct[(nrow(mod.dat.r2)-5):nrow(mod.dat.r2)])
+  mortality_int_r2 <- mean(mod.dat.r2$mort.pct[(nrow(mod.dat.r2)-5):nrow(mod.dat.r2)])
+  removal_int_r2 <- mean(mod.dat.r2$remv.pct[(nrow(mod.dat.r2)-5):nrow(mod.dat.r2)])
+  
+  # Determine probability of catastrophic fire in each region
+  
+  fire_r8_prob <- nrow(fire_r8_df)/(2014-min(fire_r8_df$FIRE_YEAR))
+  fire_r9_prob <- nrow(fire_r9_df)/(2014-min(fire_r9_df$FIRE_YEAR))
+  fire_r2_prob <- nrow(fire_r2_df)/(2014-min(fire_r2_df$FIRE_YEAR))
+  
+  fire_density_r9 <- density(fire_r9_df$pct_acres)
+  fire_density_r9 <- data.frame(fire_density_r9$x, fire_density_r9$y)
+  colnames(fire_density_r9) <- c("x","y")
+  fire_density_r9 <- filter(fire_density_r9, x >= 0)
+  
+  fire_density_r8 <- density(fire_r8_df$pct_acres)
+  fire_density_r8 <- data.frame(fire_density_r8$x, fire_density_r8$y)
+  colnames(fire_density_r8) <- c("x","y")
+  fire_density_r8 <- filter(fire_density_r8, x >= 0)
+  
+  fire_density_r2 <- density(fire_r2_df$pct_acres)
+  fire_density_r2 <- data.frame(fire_density_r2$x, fire_density_r2$y)
+  colnames(fire_density_r2) <- c("x","y")
+  fire_density_r2 <- filter(fire_density_r2, x >= 0)
+  
+  # Determine probability of larger than normal pest outbreak
+  
+  pest_r8_prob <- sum(pest_r8$outbreak)/(max(pest_r8$Year)-min(pest_r8$Year))
+  pest_r9_prob <- sum(pest_r9$outbreak)/(max(pest_r9$Year)-min(pest_r9$Year))
+  pest_r2_prob <- sum(pest_r2$outbreak)/(max(pest_r2$Year)-min(pest_r2$Year))
+  
+  pest_density_r2 <- density(pest_r2$pct_acres[pest_r2$outbreak==1])
+  pest_density_r2 <- data.frame(pest_density_r2$x, pest_density_r2$y)
+  colnames(pest_density_r2) <- c("x","y")
+  pest_density_r2 <- filter(pest_density_r2, x >= 0)
+  
+  pest_density_r8 <- density(pest_r8$pct_acres[pest_r8$outbreak==1])
+  pest_density_r8 <- data.frame(pest_density_r8$x, pest_density_r8$y)
+  colnames(pest_density_r8) <- c("x","y")
+  pest_density_r8 <- filter(pest_density_r8, x >= 0)
+  
+  pest_density_r9 <- density(pest_r9$pct_acres[pest_r9$outbreak==1])
+  pest_density_r9 <- data.frame(pest_density_r9$x, pest_density_r9$y)
+  colnames(pest_density_r9) <- c("x","y")
+  pest_density_r9 <- filter(pest_density_r9, x >= 0)
+  
+    # Determine probability of category 5 tornado
+  
+  tornado_r8_prob <- nrow(tornado_8)/(max(tornado_8$year)-min(tornado_8$year))
+  tornado_r9_prob <- nrow(tornado_9)/(max(tornado_9$year)-min(tornado_9$year))
+  tornado_r2_prob <- nrow(tornado_2)/(max(tornado_2$year)-min(tornado_2$year))
+  
+  tornado_density_r2 <- density(tornado_2$pct_acres)
+  tornado_density_r2 <- data.frame(tornado_density_r2$x, tornado_density_r2$y)
+  colnames(tornado_density_r2) <- c("x","y")
+  tornado_density_r2 <- filter(tornado_density_r2, x >= 0)
+  
+  tornado_density_r8 <- density(tornado_8$pct_acres)
+  tornado_density_r8 <- data.frame(tornado_density_r8$x, tornado_density_r8$y)
+  colnames(tornado_density_r8) <- c("x","y")
+  tornado_density_r8 <- filter(tornado_density_r8, x >= 0)
+  
+  tornado_density_r9 <- density(tornado_9$pct_acres)
+  tornado_density_r9 <- data.frame(tornado_density_r9$x, tornado_density_r9$y)
+  colnames(tornado_density_r9) <- c("x","y")
+  tornado_density_r9 <- filter(tornado_density_r9, x >= 0)
+  
+  
+  # Use while loop to build forecast year by year
+  while (y < 2065) {
+    
+    # Will there be a fire, and if yes, what will the effect be?
+    
+    fire_r9 <- sample(c(0,1),1,prob = c((1-fire_r9_prob),fire_r9_prob))
+    fire_r8 <- sample(c(0,1),1,prob = c((1-fire_r8_prob),fire_r8_prob))
+    fire_r2 <- sample(c(0,1),1,prob = c((1-fire_r2_prob),fire_r2_prob))
+    
+    if(fire_r9 == 1){
+      fire_effect_r9 <- sample(fire_density_r9$x, 1, prob = fire_density_r9$y)
+    } else {
+      fire_effect_r9 <- 0
+    }
+    
+    if(fire_r8 == 1){
+      fire_effect_r8 <- sample(fire_density_r8$x, 1, prob = fire_density_r8$y)
+    } else {
+      fire_effect_r8 <- 0
+    }
+    
+    if(fire_r2 == 1){
+      fire_effect_r2 <- sample(fire_density_r2$x, 1, prob = fire_density_r2$y)
+    } else {
+      fire_effect_r2 <- 0
+    }
+    
+    # Will there be a pest outbreak? And if yes, what will the effect be?
+    
+    pest_ob_r9 <- sample(c(0,1),1,prob = c((1-pest_r9_prob),pest_r9_prob))
+    pest_ob_r8 <- sample(c(0,1),1,prob = c((1-pest_r8_prob),pest_r8_prob))
+    pest_ob_r2 <- sample(c(0,1),1,prob = c((1-pest_r2_prob),pest_r2_prob))
+    
+    if(pest_ob_r9 == 1){
+      pest_effect_r9 <- sample(pest_density_r9$x, 1, prob = pest_density_r9$y)
+    } else {
+      pest_effect_r9 <- 0
+    }
+    
+    if(pest_ob_r2 == 1){
+      pest_effect_r2 <- sample(pest_density_r2$x, 1, prob = pest_density_r2$y)
+    } else {
+      pest_effect_r2 <- 0
+    }
+    
+    if(pest_ob_r8 == 1){
+      pest_effect_r8 <- sample(pest_density_r8$x, 1, prob = pest_density_r8$y)
+    } else {
+      pest_effect_r8 <- 0
+    }
+    
+    # Will there be a big tornado outbreak? And if yes, what will the effect be?
+    
+    tornado_r9 <- sample(c(0,1),1,prob = c((1-tornado_r9_prob),tornado_r9_prob))
+    tornado_r8 <- sample(c(0,1),1,prob = c((1-tornado_r8_prob),tornado_r8_prob))
+    tornado_r2 <- sample(c(0,1),1,prob = c((1-tornado_r2_prob),tornado_r2_prob))
+    
+    if(tornado_r9 == 1){
+      tornado_effect_r9 <- sample(tornado_density_r9$x, 1, prob = tornado_density_r9$y)
+    } else {
+      tornado_effect_r9 <- 0
+    }
+    
+    if(tornado_r2 == 1){
+      tornado_effect_r2 <- sample(tornado_density_r2$x, 1, prob = tornado_density_r2$y)
+    } else {
+      tornado_effect_r2 <- 0
+    }
+    
+    if(tornado_r8 == 1){
+      tornado_effect_r8 <- sample(tornado_density_r8$x, 1, prob = tornado_density_r8$y)
+    } else {
+      tornado_effect_r8 <- 0
+    }
+    
+
+    # Define starting inventory value
+    start_inv_r9 <- df$inventory.r9[df$year == (y-1)]
+    
+    # Calculate the new growth, removal, mortality percent of inventory for the year
+    df$new_growth_pct_r9[df$year == y] <- (y - 2014)*growth_roc_r9 + growth_int_r9 
+    #+ df$new_growth_pct_r9[df$year == (y-1)]*growth_lag_roc_r9
+    new_mort_pct_r9 <- (y - 2014)*mortality_roc_r9 + mortality_int_r9
+    new_remv_pct_r9 <- (y - 2014)*removal_roc_r9 + removal_int_r9
+    
+    if(df$new_growth_pct_r9[df$year == y] < 0){
+      df$new_growth_pct_r9[df$year == y] <- 0
+    }
+    if(new_mort_pct_r9 < 0){
+      new_mort_pct_r9 <- 0
+    }
+    if(new_remv_pct_r9 < 0){
+      new_remv_pct_r9 <- 0
+    }
+    
+    # Calculate the inventory value for the year
+    df$inventory.r9[df$year == y] <- start_inv_r9[[1]] + 
+    df$new_growth_pct_r9[df$year == y] * start_inv_r9[[1]] - 
+    new_mort_pct_r9 * start_inv_r9[[1]] - 
+    new_remv_pct_r9 * start_inv_r9[[1]] - 
+    fire_effect_r9 * start_inv_r9[[1]] -
+    pest_effect_r9 * start_inv_r9[[1]] - 
+      tornado_effect_r9 * start_inv_r9[[1]]
+    
+    # Define starting inventory value
+    start_inv_r8 <- df$inventory.r8[df$year == (y-1)]
+    
+    # Calculate the new growth, removal, mortality percent of inventory for the year
+    df$new_growth_pct_r8[df$year == y] <- (y - 2014)*growth_roc_r8 + growth_int_r8 
+    #+ df$new_growth_pct_r8[df$year == (y-1)]*growth_lag_roc_r8
+    df$new_mort_pct_r8[df$year == y] <- (y - 2014)*mortality_roc_r8 + mortality_int_r8 
+    #+ df$new_mort_pct_r8[df$year == (y - 1)]*mortality_lag_roc_r8
+    df$new_remv_pct_r8[df$year == y] <- (y - 2014)*removal_roc_r8 + removal_int_r8 
+    #+ df$new_remv_pct_r8[df$year == (y-1)]*removal_lag_roc_r8
+
+    if(df$new_growth_pct_r8 < 0){
+      df$new_growth_pct_r8 <- 0
+    }
+    if(df$new_mort_pct_r8 < 0){
+      df$new_mort_pct_r8 <- 0
+    }
+    if(df$new_remv_pct_r8 < 0){
+      df$new_remv_pct_r8 <- 0
+    }    
+        
+    # Calculate the inventory value for the year
+    df$inventory.r8[df$year == y] <- start_inv_r8[[1]] + 
+    df$new_growth_pct_r8[df$year == y] * start_inv_r8[[1]] - 
+    df$new_mort_pct_r8[df$year == y] * start_inv_r8[[1]] - 
+    df$new_remv_pct_r8[df$year == y] * start_inv_r8[[1]] - 
+    fire_effect_r8 * start_inv_r8[[1]]-
+    pest_effect_r8 * start_inv_r8[[1]] - 
+      tornado_effect_r8 * start_inv_r8[[1]]
+    
+    # Define starting inventory value
+    start_inv_r2 <- df$inventory.r2[df$year == (y-1)]
+    
+    # Calculate the new growth, removal, mortality percent of inventory for the year
+    new_growth_pct_r2 <- (y - 2014)*growth_roc_r2 + growth_int_r2
+    df$new_mort_pct_r2[df$year == y] <- (y - 2014)*mortality_roc_r2 + mortality_int_r2 
+    #+ df$new_mort_pct_r2[df$year == (y-1)]*mortality_lag_roc_r2
+    new_remv_pct_r2 <- (y - 2014)*removal_roc_r2 + removal_int_r2
+    
+    if(new_growth_pct_r2 < 0){
+      new_growth_pct_r2 <- 0
+    }
+    if(df$new_mort_pct_r2[df$year == y] < 0){
+      df$new_mort_pct_r2[df$year == y] <- 0
+    }
+    if(new_remv_pct_r2 < 0){
+      new_remv_pct_r2 <- 0
+    }    
+    
+    # Calculate the inventory value for the year
+    df$inventory.r2[df$year == y] <- start_inv_r2[[1]] + 
+    new_growth_pct_r2 * start_inv_r2[[1]] - 
+    df$new_mort_pct_r2[df$year == y] * start_inv_r2[[1]] - 
+    new_remv_pct_r2 * start_inv_r2[[1]] - 
+    fire_effect_r2 * start_inv_r2[[1]] -  
+    pest_effect_r2 * start_inv_r2[[1]] - 
+      tornado_effect_r2 * start_inv_r2[[1]]
+    
+    y <- y+1
+  }
+  
+  df$total_inventory = df$inventory.r9 + df$inventory.r8 + df$inventory.r2
+  return(df$total_inventory)
+}
+```
+```{r}
+# This is where we define the number of times that we want the simulation to run
+new_df <- tibble(years = years)
+for (i in 2:10) {
+  new_df[, i] <- run_sim()
+}
+```
+```{r}
+new_df_long <- new_df %>% gather(key = sim_number, value = value, - years)
+```
+```{r}
+# Plot the results
+ggplot(new_df_long, aes(x = years, y = value, colour = sim_number)) + 
+  geom_smooth() +
+  scale_y_continuous(limits = c(0, 85000000000)) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  stat_summary(fun.y=mean, geom="line", colour="black", size = 2) +
+  ggtitle("White Oak Forecast Simulation", subtitle = "The black line indicates the average forecasted value for each year.") +
+  labs(y = "Inventory", x = "Year")
+```
+
+
+### Next Steps
+
+Next we need to get a better understanding of the climate scenarios and how those may affect the growth/removal/mortality of the white oak population. Once we get an understanding of the effect, we can simulate the future population under each of these scenarios to get a more realistic prediction for white oak.
+
+```{r echo = FALSE}
+
+# simple_mod <- lm(total_inventory ~ growth.pct + remv.pct + mort.pct + total_acres, data = mod.dat.test)
+# summary(simple_mod)
+# 
+# # multicollinearity
+# vif(simple_mod)
+# 
+# # non constant variance
+# ncvTest(simple_mod)
+# 
+# # independence of errors
+# durbinWatsonTest(simple_mod)
+# 
+# 
+# 
+# simple_mod2 <- lm(total_inventory ~ total_growth + total_removal + total_mortality + total_acres, data = mod.dat.test)
+# summary(simple_mod2)
+# 
+# vif(simple_mod2)
+# ncvTest(simple_mod2)
+# durbinWatsonTest(simple_mod2)
+
+# Build linear models for each and save summary stats
+growth.mod.r9 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
+growth.summary.r9 <- summary(growth.mod.r9)
+mort.mod.r9 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
+mort.summary.r9 <- summary(mort.mod.r9)
+remv.mod.r9 <- lm(log(remv.pct) ~ EVAL_GRP_YEAR, data = mod.dat.r9)
+remv.summary.r9 <- summary(remv.mod.r9)
+
+growth.mod.r8 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
+growth.summary.r8 <- summary(growth.mod.r8)
+mort.mod.r8 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
+mort.summary.r8 <- summary(mort.mod.r8)
+remv.mod.r8 <- lm(log(remv.pct) ~ EVAL_GRP_YEAR, data = mod.dat.r8)
+remv.summary.r8 <- summary(remv.mod.r8)
+
+growth.mod.r2 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
+growth.summary.r2 <- summary(growth.mod.r2)
+mort.mod.r2 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
+mort.summary.r2 <- summary(mort.mod.r2)
+remv.mod.r2 <- lm(remv.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
+remv.summary.r2 <- summary(remv.mod.r2)
+
+library(lmtest)
+par(mfrow = c(2, 2))
+plot(remv.mod.r2)
+shapiro.test(mod.dat.r2$remv.pct)
+dwtest(remv.mod.r2)
+library(gvlma)
+summary(gvlma(remv.mod.r2))
+# fail to reject the null
+plot(remv.mod.r9)
+dwtest(remv.mod.r9)
+summary(gvlma(remv.mod.r9))
+# fail to reject the null
+plot(remv.mod.r8)
+dwtest(remv.mod.r8)
+summary(gvlma(remv.mod.r8))
+##### REJECT THE NULL - how to deal with this?
+
+dwtest(mort.mod.r2)
+summary(gvlma(mort.mod.r2))
+##### REJECT THE NULL - how to deal with this?
+dwtest(mort.mod.r9)
+summary(gvlma(mort.mod.r9))
+# fail to reject the null
+dwtest(mort.mod.r8)
+summary(gvlma(mort.mod.r8))
+##### REJECT THE NULL - how to deal with this?
+
+dwtest(growth.mod.r2)
+summary(gvlma(growth.mod.r2))
+# fail to reject the null
+dwtest(growth.mod.r9)
+summary(gvlma(growth.mod.r9))
+##### REJECT THE NULL - how to deal with this?
+dwtest(growth.mod.r8)
+summary(gvlma(mort.mod.r8))
+##### REJECT THE NULL - how to deal with this?
+
+
+
+mean(growth.mod.r9$residuals)
+plot(fitted(growth.mod.r9), residuals(growth.mod.r9))
+
+
+library(tseries)
+
+ts_growth_r9 <- ts(mod.dat.r9$growth.pct, start = 2003, end = 2014)
+ar_growth_r9 <- ar.ols(ts_growth_r9)
+
+
+ggAcf(mod.dat.r9$growth.pct)
+```
 
 Documentation
 =======================================================================
 
-#### Data
+#### *Conclusion/Result*
 
-The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1991 through 2014.
+**The white oak population will stay relatively flat in the near term.** Due to limited historical data, it is important to use caution when interpreting these results further into the forecast horizon. With only 13 annual data points to build the forecast, looking out past ten years serves best as a directional indication of the White Oak population.
 
-#### Method
+#### *Methodology*
 
-##### *Forecast*
+To build a forecast for the white oak population over the next 50 years, we decided to use a **simulation**. A simulation will allow us to forecast current trends in growth, removal, and mortality, as well as incorporate variables to capture the rare events such as catastrophic wildfires, category 5 tornados, and large-scale pest outbreaks. These are events that we would not expect to occur every year, or even once every 10 years. Therefore, by incorporating the probability of these events to occur each year we are able to get a better understanding of how potential environmental disasters can impact the population.
+
+Included in the simulation is the current trend of growth, removal, and mortality, as well as the associated error so that we can be sure to capture the full range of where we might expect the population to be. These trends, as well as the potential for environmental outbreaks, will give us a final forecast that will be based off the average of all the simulated outcomes, and that should be relatively close to where we would expect the true population to be over the next few years.
+
+#### *Purpose*
+
+The Brown-Forman production team has requested a forecast of the White Oak population in order to better understand any short and/or long term risk associated with the population growth and mortality. A previous consultant had provided a forecast that had some fairly significant errors, and our goal was to enhance the consultant's work so that the resulting forecast is up-to-date and accurate.
+
+#### *Data*
+
+The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 2013 through 2014.
+
+#### *Simulation Dashboard*
 
 In order to forecast the White Oak population, we first calculated the yearly percent of inventory for the growth, removal, and mortality volumes. We then built a simple linear regression model to describe the trend of the growth, removal, and mortality, individually. Using the slope coefficient and an intercept based off the average of the percent of inventory for 2010 to 2014, we predicted the growth, removal, and mortality percent of inventory for the years 2015 through 2064. Using these values, as well as user-input values for annual urbanization percent of inventory, we calculated a forecast for the White Oak inventory.
 
 As well as an inventory forecast, we also provide an upper bound and a lower bound (95% confidence interval), based off of the upper and lower estimates for the slope coefficient from the model. The 95% confidence interval means that we are 95% confident that the true values lies somewhere between the upper and lower bounds.
-
-##### *Alternate Forecast*
-
-We used the same methods to compile the alternate forecast, but instead of forecasting removal, we leave it as a user-defined field, similar to how the previous consultants compiled the forecast. 
-
-However, we believe that predicting removal in the same manner as growth and mortality provides a better picture of the forecast, as the historic data could provide a better indication of the future trend rather than leaving it to the user to define.
-
-#### Comments
-
-Since we are only using 23 annual data points to build this forecast, it is important to use caution when interpreting these results further into the forecast horizon. As you look out past ten years, the forecasts serve best as a directional indication of the White Oak population.
-
-The state forecast is only provided through 2040 due to a lack of data at the state level (the forecast for some states is based off of less than 10 years of data).
