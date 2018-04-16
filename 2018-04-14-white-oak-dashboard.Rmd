@@ -119,19 +119,19 @@ total_plot <- forecast_total %>%
          value) %>% 
   select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
 
-colnames(total_plot) <- c("years", "Median", "90%", "10%", "97.5%", "2.5%", "High", "Low")
+colnames(total_plot) <- c("years", "Mean", "90%", "10%", "97.5%", "2.5%", "High", "Low")
 
 renderDygraph({
   dygraph(total_plot,
           main = "White Oak Forecast - Simulation",
           xlab = "Year",
           ylab = "Inventory (Billions, Cubic Feet)") %>%
-        dySeries("90%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
-    dySeries("10%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
-    dySeries("97.5%", color = "black", strokeWidth = 1) %>% 
-    dySeries("2.5%", color = "black", strokeWidth = 1) %>% 
-      dySeries("Median", color = "darkgreen", strokeWidth = 2) %>% 
-        dySeries(c("High", "Median", "Low"), color = "lightgrey") %>%
+        dySeries("90%", label = "80%",color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+    dySeries("10%", label = "80%",color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+    dySeries("97.5%", label = "95%",color = "black", strokeWidth = 1) %>% 
+    dySeries("2.5%", label = "95%",color = "black", strokeWidth = 1) %>% 
+      dySeries("Mean", color = "darkgreen", strokeWidth = 2) %>% 
+        dySeries(c("High", "Mean", "Low"), color = "lightgrey") %>%
   dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
   dyRangeSelector(height = 10) %>%
     dyLegend(show = "onmouseover") %>%
@@ -197,7 +197,7 @@ output$inventory_map_rm <- renderLeaflet({
     # Layer transparent forestry regions over map for clickable regions
     addPolygons(data = regions.shp, layerId = id, color = '#000000', weight = 1, smoothFactor = 0.5,
                 opacity = 1.0, fillOpacity = 0, label = id,
-                highlightOptions = highlightOptions(color = "gray", weight = 2,
+                highlightOptions = highlightOptions(color = "red", weight = 2,
                                                     bringToFront = TRUE)) %>% 
     addLegend("bottomleft", 
               #pal = pal, 
@@ -237,6 +237,7 @@ renderDygraph ({
       stop()
     }
   ) , "Please select a shaded region from the map on the left to view the region-level forecast."))
+
     
     high_sim <- dat %>% 
         filter(years == max(years)) %>% 
@@ -269,18 +270,18 @@ renderDygraph ({
                value) %>% 
         select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
       
-      colnames(plot) <- c("years", "Median", "90%", "10%", "97.5%", "2.5%", "High", "Low")
+      colnames(plot) <- c("years", "Mean", "90%", "10%", "97.5%", "2.5%", "High", "Low")
       
       dygraph(plot,
               main = paste("White Oak Forecast - Simulation -", region.alt),
               xlab = "Year",
               ylab = "Inventory (Billions, Cubic Feet)") %>%
-        dySeries("90%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
-        dySeries("10%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
-        dySeries("97.5%", color = "black", strokeWidth = 1) %>% 
-        dySeries("2.5%", color = "black", strokeWidth = 1) %>% 
-        dySeries("Median", color = "darkgreen", strokeWidth = 2) %>% 
-        dySeries(c("High", "Median", "Low"), color = "lightgrey") %>%
+        dySeries("90%", label = "80%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+        dySeries("10%", label = "80%",color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+        dySeries("97.5%", label = "95%",color = "black", strokeWidth = 1) %>% 
+        dySeries("2.5%", label = "95%",color = "black", strokeWidth = 1) %>% 
+        dySeries("Mean", color = "darkgreen", strokeWidth = 2) %>% 
+        dySeries(c("High", "Mean", "Low"), color = "lightgrey") %>%
         dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
         dyRangeSelector(height = 10) %>%
         dyLegend(show = "onmouseover") %>%
