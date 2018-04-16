@@ -288,42 +288,6 @@ renderDygraph ({
 
 ```
 
-Forecast Data
-=======================================================================
-
-Inputs {.sidebar}
------------------------------------------------------------------------
-
-\
-
-The data displayed to the right includes the values selected for Annual increase in Removal and/or Urbanization from the prior tabs. 
-
-Enter Brown-Forman's demand for White Oak in the year `r max(data$EVAL_GRP_YEAR)-3`:
-
-\
-
-```{r}
-numericInput("demand", label = paste0("Brown-Forman ", max(data$EVAL_GRP_YEAR)-3," Demand:"), 360000, min = 0, max = 1000000000)
-```
-
-\
-
-Use the sliding bar below to adjust the increase in Annual Demand to analyze the portion of Total Inventory and Total Removal that B-F Demand occupies.
-
-```{r}
-tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: green}"))
-
-sliderInput("bf_demand", label = "Brown-Forman Annual Demand Increase (%):",
-            min = 0.0, max = 20.0, value = 10.0, step = 0.5)
-```
-
-Row
------------------------------------------------------------------------
-
-```{r echo = F,warning=FALSE,message=FALSE,error=FALSE}
-
-```
-
 Documentation
 =======================================================================
 
