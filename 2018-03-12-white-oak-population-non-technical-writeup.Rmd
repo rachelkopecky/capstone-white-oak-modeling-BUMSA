@@ -19,7 +19,7 @@ htmltools::img(src = knitr::image_uri("brown-forman-2788813.png" ),
 
 ### *Conclusion/Result*
 
-**The white oak population will stay relatively flat in the near term.** Due to limited historical data, it is important to use caution when interpreting these results further into the forecast horizon. With only 13 annual data points to build the forecast, looking out past ten years serves best as a directional indication of the White Oak population.
+**The white oak population will stay relatively flat in the next 10 years.** Due to limited historical data, it is important to use caution when interpreting these results further into the forecast horizon. With only 13 annual data points to build the forecast, looking out past ten years serves best as a directional indication of the White Oak population.
 
 ### *Methodology*
 
@@ -33,20 +33,27 @@ The Brown-Forman production team has requested a forecast of the White Oak popul
 
 ### *Data*
 
-The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 2013 through 2014.
+The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 2003 through 2014.
 
 ### *Simulation Dashboard*
 
-In order to forecast the White Oak population, we first calculated the yearly percent of inventory for the growth, removal, and mortality volumes. We then built a simple linear regression model to describe the trend of the growth, removal, and mortality, individually. Using the slope coefficient and an intercept based off the average of the percent of inventory for 2010 to 2014, we predicted the growth, removal, and mortality percent of inventory for the years 2015 through 2064. Using these values, as well as user-input values for annual urbanization percent of inventory, we calculated a forecast for the White Oak inventory.
+In the simulation outline, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain rate of change values the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include a yearly shock value to provide a simple example of how we can incorporate the outside variables like wildfire, pests, drought, etc. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
 
 As well as an inventory forecast, we also provide an upper bound and a lower bound (95% confidence interval), based off of the upper and lower estimates for the slope coefficient from the model. The 95% confidence interval means that we are 95% confident that the true values lies somewhere between the upper and lower bounds.
 
+#### *Simulation*
 
+```{r, echo=FALSE}
+#Include Simulation PNG file at bottom
+htmltools::img(src = knitr::image_uri("Simulation.PNG" ), 
+               alt = 'Brown Forman Logo', 
+               style = 'position:absolute; bottom:0; left:150px; padding:10px;')
+```
 
 ```{r, echo=FALSE}
 ### *Apendix*
 #### *Simulation Variables*
-
+#![](Simulation.PNG)
 #1. **White Oak**
 #+ The White Oak data used for this analysis was received from the U.S. Forest Service (USFS). The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern United States, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 1968 through 2017. Although we have data for this period, the USFS changed the method that they use to build their population estimates, and therefore only data from 2002 onward will be used in this analysis, for consistency purposes.
 #2. **Wildfire**
