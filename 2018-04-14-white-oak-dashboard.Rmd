@@ -194,7 +194,7 @@ output$inventory_map_rm <- renderLeaflet({
     # Layer transparent forestry regions over map for clickable regions
     addPolygons(data = regions.shp, layerId = id, color = '#000000', weight = 1, smoothFactor = 0.5,
                 opacity = 1.0, fillOpacity = 0, label = id,
-                highlightOptions = highlightOptions(color = "gray", weight = 2,
+                highlightOptions = highlightOptions(color = "red", weight = 2,
                                                     bringToFront = TRUE)) %>% 
     addLegend("bottomleft", 
               #pal = pal, 
@@ -229,59 +229,61 @@ renderDygraph ({
     } else if (region.alt == "Region 9") {
       dat <- forecast_r9
     } else {
+      dat <- NULL
       print("Please select a shaded region from the map on the left to view the region-level forecast.")
     }
   ) , "Please select a shaded region from the map on the left to view the region-level forecast."))
-    
-    high_sim <- dat %>% 
-        filter(years == max(years)) %>% 
-        filter(sim_number != "mean" &
-                 sim_number != "q90" &
-                 sim_number != "q10" &
-                 sim_number != "q975" &
-                 sim_number != "q025") %>% 
-        filter(value == max(value))
-      
-      sim_high <- unique(high_sim$sim_number)
-      
-      low_sim <- dat %>% 
-        filter(years == max(years)) %>% 
-        filter(sim_number != "mean" &
-                 sim_number != "q90" &
-                 sim_number != "q10"&
-                 sim_number != "q975"&
-                 sim_number != "q025") %>% 
-        filter(value == min(value))
-      
-      sim_low <- unique(low_sim$sim_number)
-      
-      need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
-      
-      plot <- dat %>% 
-        filter(sim_number %in% need_cols)  %>%
-        mutate(value = value/1000000000) %>% 
-        spread(sim_number, 
-               value) %>% 
-        select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
-      
-      colnames(plot) <- c("years", "Median", "90%", "10%", "97.5%", "2.5%", "High", "Low")
-      
-      dygraph(plot,
-              main = paste("White Oak Forecast - Simulation -", region.alt),
-              xlab = "Year",
-              ylab = "Inventory (Billions, Cubic Feet)") %>%
-        dySeries("90%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
-        dySeries("10%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
-        dySeries("97.5%", color = "black", strokeWidth = 1) %>% 
-        dySeries("2.5%", color = "black", strokeWidth = 1) %>% 
-        dySeries("Median", color = "darkgreen", strokeWidth = 2) %>% 
-        dySeries(c("High", "Median", "Low"), color = "lightgrey") %>%
-        dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
-        dyRangeSelector(height = 10) %>%
-        dyLegend(show = "onmouseover") %>%
-        dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
-        dyAxis("y", valueRange = c(0, (max(plot$`97.5%`)+.1*max(plot$`97.5%`))))
 
+  if(!is.null(dat)){
+         high_sim <- dat %>% 
+                filter(years == max(years)) %>% 
+                filter(sim_number != "mean" &
+                         sim_number != "q90" &
+                         sim_number != "q10" &
+                         sim_number != "q975" &
+                         sim_number != "q025") %>% 
+                filter(value == max(value))
+              
+              sim_high <- unique(high_sim$sim_number)
+              
+              low_sim <- dat %>% 
+                filter(years == max(years)) %>% 
+                filter(sim_number != "mean" &
+                         sim_number != "q90" &
+                         sim_number != "q10"&
+                         sim_number != "q975"&
+                         sim_number != "q025") %>% 
+                filter(value == min(value))
+              
+              sim_low <- unique(low_sim$sim_number)
+              
+              need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+              
+              plot <- dat %>% 
+                filter(sim_number %in% need_cols)  %>%
+                mutate(value = value/1000000000) %>% 
+                spread(sim_number, 
+                       value) %>% 
+                select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+              
+              colnames(plot) <- c("years", "Median", "90%", "10%", "97.5%", "2.5%", "High", "Low")
+              
+              dygraph(plot,
+                      main = paste("White Oak Forecast - Simulation -", region.alt),
+                      xlab = "Year",
+                      ylab = "Inventory (Billions, Cubic Feet)") %>%
+                dySeries("90%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+                dySeries("10%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+                dySeries("97.5%", color = "black", strokeWidth = 1) %>% 
+                dySeries("2.5%", color = "black", strokeWidth = 1) %>% 
+                dySeries("Median", color = "darkgreen", strokeWidth = 2) %>% 
+                dySeries(c("High", "Median", "Low"), color = "lightgrey") %>%
+                dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
+                dyRangeSelector(height = 10) %>%
+                dyLegend(show = "onmouseover") %>%
+                dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
+                dyAxis("y", valueRange = c(0, (max(plot$`97.5%`)+.1*max(plot$`97.5%`))))
+  }
 })
 
 ```
