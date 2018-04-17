@@ -17,12 +17,13 @@ library(utf8)
 library(stringr)
 library(lmtest)
 library(car)
+library(dygraphs)
 library(gvlma)
 library(sandwich)
 library(forecast)
 ```
 
-```{r echo = FALSE}
+```{r echo = FALSE, warning = FALSE, message = FALSE, include = FALSE}
 # Read in White Oak inventory files from USFS
 inv23 <- read_csv("WhiteOakData/white_oak_inv_23.csv")
 inv24 <- read_csv("WhiteOakData/white_oak_inv_24.csv")
@@ -261,7 +262,7 @@ mod.dat.r2 <- mod.dat %>%
 
 In the simulation outline below, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain rate of change values the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include a yearly shock value to provide a simple example of how we can incorporate the outside variables like wildfire, pests, drought, etc. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
 
-```{r}
+```{r echo = FALSE, warning = FALSE, message = FALSE, include = FALSE}
 
 # Calculate growth, removal, mortality percent of inventory
 mod.dat.r9 <- mod.dat.r9 %>% 
@@ -387,54 +388,9 @@ growth.summary.r8 <- coeftest(growth.mod.r8, growth.mod.r8$newse)
 ```
 
 ```{r}
-
+# define our time period
 years <- 2014:2064
 
-# Build simulation function
-run_sim <- function() {
-  # Define forecast period
-  inv <- 0
-  df <- tibble(year = years, inventory.r9 = inv, inventory.r8 = inv, inventory.r2 = inv, total_inventory = inv, new_growth_pct_r9 = inv, new_growth_pct_r8 = inv, new_remv_pct_r8 = inv, new_mort_pct_r2 = inv, new_mort_pct_r8 = inv)
-  
-  # Initial inventory equal to 2014 inventory
-  df$inventory.r9[df$year == 2014] <- mod.dat.r9$total_inventory[nrow(mod.dat.r9)]
-  df$inventory.r8[df$year == 2014] <- mod.dat.r8$total_inventory[nrow(mod.dat.r8)]
-  df$inventory.r2[df$year == 2014] <- mod.dat.r2$total_inventory[nrow(mod.dat.r2)]
-  
-  df$new_growth_pct_r8[df$year == 2014] <- mod.dat.r8$growth.pct[nrow(mod.dat.r8)]
-  df$new_growth_pct_r9[df$year == 2014] <- mod.dat.r9$growth.pct[nrow(mod.dat.r9)]
-  df$new_mort_pct_r8[df$year == 2014] <- mod.dat.r8$mort.pct[nrow(mod.dat.r8)]
-  df$new_mort_pct_r2[df$year == 2014] <- mod.dat.r2$mort.pct[nrow(mod.dat.r2)]
-  df$new_remv_pct_r8[df$year == 2014] <- mod.dat.r8$remv.pct[nrow(mod.dat.r8)]
-  
-  # Build the normal distributions for growth, mortality, removal
-  growth_dist_r9 <- rnorm(100, growth.mod.r9$coefficients[[2]], growth.summary.r9$coefficients[[4]])
-  mortality_dist_r9 <- rnorm(100, mort.mod.r9$coefficients[[2]], mort.summary.r9$coefficients[[4]])
-  removal_dist_r9 <- rnorm(100, remv.mod.r9$coefficients[[2]], remv.summary.r9$coefficients[[4]])
-  
-  growth_dist_r8 <- rnorm(100, growth.mod.r8$coefficients[[2]], growth.summary.r8[[4]])
-  mortality_dist_r8 <- rnorm(100, mort.mod.r8$coefficients[[2]], mort.summary.r8[[4]])
-  removal_dist_r8 <- rnorm(100, remv.mod.r8$coefficients[[2]], remv.summary.r8[[4]])
-
-  growth_dist_r2 <- rnorm(100, growth.mod.r2$coefficients[[2]], growth.summary.r2$coefficients[[4]])
-  mortality_dist_r2 <- rnorm(100, mort.mod.r2$coefficients[[2]], mort.summary.r2$coefficients[[4]])
-  removal_dist_r2 <- rnorm(100, remv.mod.r2$coefficients[[2]], remv.summary.r2[[4]])
-  
-  # Define rate of change by sampling from distributions created above. We want the rate of change to be the same over the entire forecasted time period, but different for each simulation. This is why we define it prior to the while loop below.
-  growth_roc_r9 <- base::sample(growth_dist_r9, 1)
-  mortality_roc_r9 <- base::sample(mortality_dist_r9, 1)
-  removal_roc_r9 <- base::sample(removal_dist_r9, 1)
-  
-  growth_roc_r8 <- base::sample(growth_dist_r8, 1)
-  mortality_roc_r8 <- base::sample(mortality_dist_r8, 1)
-  removal_roc_r8 <- base::sample(removal_dist_r8, 1)
-  
-  growth_roc_r2 <- base::sample(growth_dist_r2, 1)
-  mortality_roc_r2 <- base::sample(mortality_dist_r2, 1)
-  removal_roc_r2 <- base::sample(removal_dist_r2, 1)
-  
-  y <- 2015
-  
   # Define intercepts by taking the average of the last 5 years for growth, removal, mortality percent of inventory
   growth_int_r9 <- mean(mod.dat.r9$growth.pct[(nrow(mod.dat.r9)-5):nrow(mod.dat.r9)])
   mortality_int_r9 <- mean(mod.dat.r9$mort.pct[(nrow(mod.dat.r9)-5):nrow(mod.dat.r9)])
@@ -449,7 +405,6 @@ run_sim <- function() {
   removal_int_r2 <- mean(mod.dat.r2$remv.pct[(nrow(mod.dat.r2)-5):nrow(mod.dat.r2)])
   
   # Determine probability of catastrophic fire in each region
-  
   fire_r8_prob <- nrow(fire_r8_df)/(2014-min(fire_r8_df$FIRE_YEAR))
   fire_r9_prob <- nrow(fire_r9_df)/(2014-min(fire_r9_df$FIRE_YEAR))
   fire_r2_prob <- nrow(fire_r2_df)/(2014-min(fire_r2_df$FIRE_YEAR))
@@ -510,13 +465,53 @@ run_sim <- function() {
   tornado_density_r9 <- data.frame(tornado_density_r9$x, tornado_density_r9$y)
   colnames(tornado_density_r9) <- c("x","y")
   tornado_density_r9 <- filter(tornado_density_r9, x >= 0)
+
+  # We will build normal distributions for GRM with a mean equal to the lm coefficient estimates and an SD equal to the standard error on the coefficient estimates
+  growth_dist_r9 <- rnorm(100, growth.mod.r9$coefficients[[2]], growth.summary.r9$coefficients[[4]])
+  mortality_dist_r9 <- rnorm(100, mort.mod.r9$coefficients[[2]], mort.summary.r9$coefficients[[4]])
+  removal_dist_r9 <- rnorm(100, remv.mod.r9$coefficients[[2]], remv.summary.r9$coefficients[[4]])
   
+  growth_dist_r8 <- rnorm(100, growth.mod.r8$coefficients[[2]], growth.summary.r8[[4]])
+  mortality_dist_r8 <- rnorm(100, mort.mod.r8$coefficients[[2]], mort.summary.r8[[4]])
+  removal_dist_r8 <- rnorm(100, remv.mod.r8$coefficients[[2]], remv.summary.r8[[4]])
+
+  growth_dist_r2 <- rnorm(100, growth.mod.r2$coefficients[[2]], growth.summary.r2$coefficients[[4]])
+  mortality_dist_r2 <- rnorm(100, mort.mod.r2$coefficients[[2]], mort.summary.r2$coefficients[[4]])
+  removal_dist_r2 <- rnorm(100, remv.mod.r2$coefficients[[2]], remv.summary.r2[[4]])
   
-  # Use while loop to build forecast year by year
+# Build simulation function
+run_sim <- function() {
+  # initialize a dataframe to store inventory values
+  inv <- 0
+  df <- tibble(year = years, inventory.r9 = inv, inventory.r8 = inv, inventory.r2 = inv, total_inventory = inv)
+  
+  # Initial inventory equal to 2014 inventory
+  df$inventory.r9[df$year == 2014] <- mod.dat.r9$total_inventory[nrow(mod.dat.r9)]
+  df$inventory.r8[df$year == 2014] <- mod.dat.r8$total_inventory[nrow(mod.dat.r8)]
+  df$inventory.r2[df$year == 2014] <- mod.dat.r2$total_inventory[nrow(mod.dat.r2)]
+  
+  # Define rate of change for GRM percent of inventory by sampling from distributions created above. This allows us to have the random variation across the entire spectrum of possible coefficient estimates. We want the rate of change to be the same over the entire forecasted time period, but different for each simulation. This is why we define it prior to the while loop below.
+  growth_roc_r9 <- base::sample(growth_dist_r9, 1)
+  mortality_roc_r9 <- base::sample(mortality_dist_r9, 1)
+  removal_roc_r9 <- base::sample(removal_dist_r9, 1)
+  
+  growth_roc_r8 <- base::sample(growth_dist_r8, 1)
+  mortality_roc_r8 <- base::sample(mortality_dist_r8, 1)
+  removal_roc_r8 <- base::sample(removal_dist_r8, 1)
+  
+  growth_roc_r2 <- base::sample(growth_dist_r2, 1)
+  mortality_roc_r2 <- base::sample(mortality_dist_r2, 1)
+  removal_roc_r2 <- base::sample(removal_dist_r2, 1)
+  
+  # initialize first year of forecast
+  y <- 2015
+  
+  # Use while loop to build forecast by year
   while (y < 2065) {
     
-    # Will there be a fire, and if yes, what will the effect be?
+    ## REGION 9
     
+    # Will there be a fire, and if yes, what will the effect be?
     fire_r9 <- sample(c(0,1),1,prob = c((1-fire_r9_prob),fire_r9_prob))
     fire_r8 <- sample(c(0,1),1,prob = c((1-fire_r8_prob),fire_r8_prob))
     fire_r2 <- sample(c(0,1),1,prob = c((1-fire_r2_prob),fire_r2_prob))
@@ -540,7 +535,6 @@ run_sim <- function() {
     }
     
     # Will there be a pest outbreak? And if yes, what will the effect be?
-    
     pest_ob_r9 <- sample(c(0,1),1,prob = c((1-pest_r9_prob),pest_r9_prob))
     pest_ob_r8 <- sample(c(0,1),1,prob = c((1-pest_r8_prob),pest_r8_prob))
     pest_ob_r2 <- sample(c(0,1),1,prob = c((1-pest_r2_prob),pest_r2_prob))
@@ -563,8 +557,7 @@ run_sim <- function() {
       pest_effect_r8 <- 0
     }
     
-    # Will there be a big tornado outbreak? And if yes, what will the effect be?
-    
+    # Will there be a category 5 tornado? And if yes, what will the effect be?
     tornado_r9 <- sample(c(0,1),1,prob = c((1-tornado_r9_prob),tornado_r9_prob))
     tornado_r8 <- sample(c(0,1),1,prob = c((1-tornado_r8_prob),tornado_r8_prob))
     tornado_r2 <- sample(c(0,1),1,prob = c((1-tornado_r2_prob),tornado_r2_prob))
@@ -592,12 +585,13 @@ run_sim <- function() {
     start_inv_r9 <- df$inventory.r9[df$year == (y-1)]
     
     # Calculate the new growth, removal, mortality percent of inventory for the year
-    df$new_growth_pct_r9[df$year == y] <- (y - 2014)*growth_roc_r9 + growth_int_r9
+    new_growth_pct_r9 <- (y - 2014)*growth_roc_r9 + growth_int_r9
     new_mort_pct_r9 <- (y - 2014)*mortality_roc_r9 + mortality_int_r9
     new_remv_pct_r9 <- (y - 2014)*removal_roc_r9 + removal_int_r9
     
-    if(df$new_growth_pct_r9[df$year == y] < 0){
-      df$new_growth_pct_r9[df$year == y] <- 0
+    # GRM % of inventory cannot be negative (negative growth = mortality, negative mortality = growth -- doesn't make intuitive sense for these values to ever be negative)
+    if(new_growth_pct_r9 < 0){
+      new_growth_pct_r9 <- 0
     }
     if(new_mort_pct_r9 < 0){
       new_mort_pct_r9 <- 0
@@ -608,53 +602,55 @@ run_sim <- function() {
     
     # Calculate the inventory value for the year
     df$inventory.r9[df$year == y] <- start_inv_r9[[1]] + 
-    df$new_growth_pct_r9[df$year == y] * start_inv_r9[[1]] - 
+    new_growth_pct_r9 * start_inv_r9[[1]] - 
     new_mort_pct_r9 * start_inv_r9[[1]] - 
     new_remv_pct_r9 * start_inv_r9[[1]] - 
     fire_effect_r9 * start_inv_r9[[1]] -
     pest_effect_r9 * start_inv_r9[[1]] - 
-      tornado_effect_r9 * start_inv_r9[[1]]
+    tornado_effect_r9 * start_inv_r9[[1]]
     
+    # REGION 8
     # Define starting inventory value
     start_inv_r8 <- df$inventory.r8[df$year == (y-1)]
     
     # Calculate the new growth, removal, mortality percent of inventory for the year
-    df$new_growth_pct_r8[df$year == y] <- (y - 2014)*growth_roc_r8 + growth_int_r8 
-    df$new_mort_pct_r8[df$year == y] <- (y - 2014)*mortality_roc_r8 + mortality_int_r8 
-    df$new_remv_pct_r8[df$year == y] <- (y - 2014)*removal_roc_r8 + removal_int_r8 
+    new_growth_pct_r8 <- (y - 2014)*growth_roc_r8 + growth_int_r8 
+    new_mort_pct_r8 <- (y - 2014)*mortality_roc_r8 + mortality_int_r8 
+    new_remv_pct_r8 <- (y - 2014)*removal_roc_r8 + removal_int_r8 
 
-    if(df$new_growth_pct_r8 < 0){
-      df$new_growth_pct_r8 <- 0
+    if(new_growth_pct_r8 < 0){
+      new_growth_pct_r8 <- 0
     }
-    if(df$new_mort_pct_r8 < 0){
-      df$new_mort_pct_r8 <- 0
+    if(new_mort_pct_r8 < 0){
+      new_mort_pct_r8 <- 0
     }
-    if(df$new_remv_pct_r8 < 0){
-      df$new_remv_pct_r8 <- 0
+    if(new_remv_pct_r8 < 0){
+      new_remv_pct_r8 <- 0
     }    
         
     # Calculate the inventory value for the year
     df$inventory.r8[df$year == y] <- start_inv_r8[[1]] + 
-    df$new_growth_pct_r8[df$year == y] * start_inv_r8[[1]] - 
-    df$new_mort_pct_r8[df$year == y] * start_inv_r8[[1]] - 
-    df$new_remv_pct_r8[df$year == y] * start_inv_r8[[1]] - 
+    new_growth_pct_r8 * start_inv_r8[[1]] - 
+    new_mort_pct_r8 * start_inv_r8[[1]] - 
+    new_remv_pct_r8 * start_inv_r8[[1]] - 
     fire_effect_r8 * start_inv_r8[[1]]-
     pest_effect_r8 * start_inv_r8[[1]] - 
-      tornado_effect_r8 * start_inv_r8[[1]]
+    tornado_effect_r8 * start_inv_r8[[1]]
     
+    ## REGION 2
     # Define starting inventory value
     start_inv_r2 <- df$inventory.r2[df$year == (y-1)]
     
     # Calculate the new growth, removal, mortality percent of inventory for the year
     new_growth_pct_r2 <- (y - 2014)*growth_roc_r2 + growth_int_r2
-    df$new_mort_pct_r2[df$year == y] <- (y - 2014)*mortality_roc_r2 + mortality_int_r2
+    new_mort_pct_r2 <- (y - 2014)*mortality_roc_r2 + mortality_int_r2
     new_remv_pct_r2 <- (y - 2014)*removal_roc_r2 + removal_int_r2
     
     if(new_growth_pct_r2 < 0){
       new_growth_pct_r2 <- 0
     }
-    if(df$new_mort_pct_r2[df$year == y] < 0){
-      df$new_mort_pct_r2[df$year == y] <- 0
+    if(new_mort_pct_r2 < 0){
+      new_mort_pct_r2 <- 0
     }
     if(new_remv_pct_r2 < 0){
       new_remv_pct_r2 <- 0
@@ -663,17 +659,17 @@ run_sim <- function() {
     # Calculate the inventory value for the year
     df$inventory.r2[df$year == y] <- start_inv_r2[[1]] + 
     new_growth_pct_r2 * start_inv_r2[[1]] - 
-    df$new_mort_pct_r2[df$year == y] * start_inv_r2[[1]] - 
+    new_mort_pct_r2 * start_inv_r2[[1]] - 
     new_remv_pct_r2 * start_inv_r2[[1]] - 
     fire_effect_r2 * start_inv_r2[[1]] -  
     pest_effect_r2 * start_inv_r2[[1]] - 
-      tornado_effect_r2 * start_inv_r2[[1]]
+    tornado_effect_r2 * start_inv_r2[[1]]
     
     y <- y+1
   }
   
   df$total_inventory = df$inventory.r9 + df$inventory.r8 + df$inventory.r2
-  return(df$inventory.r9)
+  return(df$total_inventory)
 }
 ```
 ```{r warning = FALSE, message = FALSE}
@@ -712,123 +708,132 @@ q025_df <- new_df_long %>%
   select(years, sim_number, value)
 new_df_long <- rbind(med_df, q90_df, q10_df, q975_df, q025_df, new_df_long)
 
-new_df_long$type <- ifelse(new_df_long$sim_number == "mean", "m", ifelse(grepl("q",new_df_long$sim_number)==TRUE, "q", "no"))
-new_df_long$type <- factor(new_df_long$type)
-#write_csv(new_df_long, "sim-for-dash-REGION-9.csv")
+# new_df_long$type <- ifelse(new_df_long$sim_number == "mean", "m", ifelse(grepl("q",new_df_long$sim_number)==TRUE, "q", "no"))
+# new_df_long$type <- factor(new_df_long$type)
+#write_csv(new_df_long, "sim-for-dash-REGION-2.csv")
+```
+
+```{r}
+forecast_total <- new_df_long
+
+high_sim <- forecast_total %>% 
+  filter(years == max(years)) %>% 
+  filter(sim_number != "mean" &
+           sim_number != "q90" &
+           sim_number != "q10"&
+           sim_number != "q975"&
+           sim_number != "q025") %>% 
+  filter(value == max(value))
+
+sim_high <- unique(high_sim$sim_number)
+
+low_sim <- forecast_total %>% 
+  filter(years == max(years)) %>% 
+  filter(sim_number != "mean" &
+           sim_number != "q90" &
+           sim_number != "q10"&
+           sim_number != "q975"&
+           sim_number != "q025") %>% 
+  filter(value == min(value))
+
+sim_low <- unique(low_sim$sim_number)
+
+need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+
+total_plot <- forecast_total %>% 
+  filter(sim_number %in% need_cols)  %>%
+  mutate(value = value/1000000000) %>% 
+  spread(sim_number, 
+         value) %>% 
+  select("years", "mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
+
+colnames(total_plot) <- c("years", "Mean", "90%", "10%", "97.5%", "2.5%", "High", "Low")
+
+```
+
+```{r}
+# Plot the results
+      dygraph(total_plot,
+              main = "White Oak Forecast - Simulation -",
+              xlab = "Year",
+              ylab = "Inventory (Billions, Cubic Feet)") %>%
+        dySeries("90%", label = "80%", color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+        dySeries("10%", label = "80%",color = "black", strokeWidth = 1, strokePattern = "dashed") %>% 
+        dySeries("97.5%", label = "95%",color = "black", strokeWidth = 1) %>% 
+        dySeries("2.5%", label = "95%",color = "black", strokeWidth = 1) %>% 
+        dySeries("Mean", color = "darkgreen", strokeWidth = 2) %>% 
+        dySeries(c("High", "Mean", "Low"), color = "lightgrey") %>%
+        dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
+        dyLegend(show = "onmouseover") %>%
+        dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
+        dyAxis("y", valueRange = c(0, (max(total_plot$`97.5%`)+.1*max(total_plot$`97.5%`))))
 ```
 
 
 ```{r}
-# Plot the results
-ggplot(new_df_long, aes(x = years, y = (value/1000000000), colour = type, group = sim_number, size = type)) + 
+# Compare simulation to time series multiple regression
+mod.dat.t <- mod.dat %>%
+  filter(EVAL_GRP_YEAR >= 2003 & EVAL_GRP_YEAR <= 2014) %>% 
+  group_by(EVAL_GRP_YEAR) %>% 
+  summarise(total_inventory = sum(as.numeric(total_inventory), na.rm = TRUE),
+            total_mortality = sum(as.numeric(total_mortality), na.rm = TRUE),
+            total_removal = sum(as.numeric(total_removal), na.rm = TRUE),
+            total_growth = sum(as.numeric(total_growth), na.rm = TRUE)) %>%
+  mutate(growth.pct = total_growth/total_inventory,
+         mort.pct = total_mortality/total_inventory,
+         remv.pct = total_removal/total_inventory)
+
+# convert to ts object
+mod.dat.ts <- ts(mod.dat.t, start = 2003, end = 2014)
+
+# build linear model
+step.mod <- tslm(total_inventory ~ growth.pct + remv.pct + mort.pct, data = mod.dat.ts)
+
+# use Holt Winter's linear method (damped) to forecast the GRM % of inventory. We will need future values of GRM % of inventory in order to use our tslm model for prediction.
+fcast_growth <- holt(mod.dat.ts[,'growth.pct'],damped = TRUE,h = 50)
+fcast_remv <- holt(mod.dat.ts[,'remv.pct'],damped = TRUE,h = 50)
+fcast_mort <- holt(mod.dat.ts[,'mort.pct'],damped = TRUE,h = 50)
+
+# plot(fcast_mort)
+# plot(fcast_growth)
+# plot(fcast_remv)
+
+# use the mean values of the forecasts from above for predictions
+preds <- data.frame(cbind(fcast_growth$mean, fcast_mort$mean, fcast_remv$mean))
+colnames(preds) <- c("growth.pct", "mort.pct", "remv.pct")
+
+# ts object
+preds_ts <- ts(preds, start = 2015, end = 2064)
+
+# use the tslm model from above to predict the future values for total_inventory
+fcast <- forecast(step.mod, preds)
+
+# create df of mean, high, and low forecasts (95% prediction interval)
+fcast_full <- data.frame(cbind(fcast$mean, fcast$lower[,2], fcast$upper[,2]))
+
+fcast_full$total_inventory <- fcast_full$fcast.mean
+fcast_full$inventory_upper <- fcast_full$fcast.upper...2.
+fcast_full$inventory_lower <- fcast_full$fcast.lower...2.
+fcast_full$year = 2015:2064
+
+# convert to long format for plotting
+fcast_long <- fcast_full %>%
+  select(year, total_inventory, inventory_upper, inventory_lower) %>%
+  gather(line,
+         value,
+         -year)
+
+# plot the forecast
+  ggplot(fcast_long, aes(x = year, y = value/1000000000, colour = line, size = line, linetype = line)) +
   geom_line() +
-  scale_color_manual(values=c("lightgrey", "darkgreen", "black"))+
-  scale_size_manual(values = c(.5, 2, 1))+
-  scale_y_continuous(limits = c(0,100))+
-  theme_minimal()+
-  ggtitle("White Oak Forecast - Simulation", subtitle = "The black line indicates the mean forecast for each year.") +
-  labs(y = "Inventory (Billions, Cubic Feet)", x = "Year")+ 
-  theme(legend.position="none")
-```
-
-
-### Next Steps
-
-Next we need to get a better understanding of the climate scenarios and how those may affect the growth/removal/mortality of the white oak population. Once we get an understanding of the effect, we can simulate the future population under each of these scenarios to get a more realistic prediction for white oak.
-
-```{r echo = FALSE}
-
-# simple_mod <- lm(total_inventory ~ growth.pct + remv.pct + mort.pct + total_acres, data = mod.dat.test)
-# summary(simple_mod)
-# 
-# # multicollinearity
-# vif(simple_mod)
-# 
-# # non constant variance
-# ncvTest(simple_mod)
-# 
-# # independence of errors
-# durbinWatsonTest(simple_mod)
-# 
-# 
-# 
-# simple_mod2 <- lm(total_inventory ~ total_growth + total_removal + total_mortality + total_acres, data = mod.dat.test)
-# summary(simple_mod2)
-# 
-# vif(simple_mod2)
-# ncvTest(simple_mod2)
-# durbinWatsonTest(simple_mod2)
-
-# Build linear models for each and save summary stats
-growth.mod.r9 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
-growth.summary.r9 <- summary(growth.mod.r9)
-mort.mod.r9 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r9)
-mort.summary.r9 <- summary(mort.mod.r9)
-remv.mod.r9 <- lm(log(remv.pct) ~ EVAL_GRP_YEAR, data = mod.dat.r9)
-remv.summary.r9 <- summary(remv.mod.r9)
-
-growth.mod.r8 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
-growth.summary.r8 <- summary(growth.mod.r8)
-mort.mod.r8 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r8)
-mort.summary.r8 <- summary(mort.mod.r8)
-remv.mod.r8 <- lm(log(remv.pct) ~ EVAL_GRP_YEAR, data = mod.dat.r8)
-remv.summary.r8 <- summary(remv.mod.r8)
-
-growth.mod.r2 <- lm(growth.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
-growth.summary.r2 <- summary(growth.mod.r2)
-mort.mod.r2 <- lm(mort.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
-mort.summary.r2 <- summary(mort.mod.r2)
-remv.mod.r2 <- lm(remv.pct ~ EVAL_GRP_YEAR, data = mod.dat.r2)
-remv.summary.r2 <- summary(remv.mod.r2)
-
-library(lmtest)
-par(mfrow = c(2, 2))
-plot(remv.mod.r2)
-shapiro.test(mod.dat.r2$remv.pct)
-dwtest(remv.mod.r2)
-library(gvlma)
-summary(gvlma(remv.mod.r2))
-# fail to reject the null
-plot(remv.mod.r9)
-dwtest(remv.mod.r9)
-summary(gvlma(remv.mod.r9))
-# fail to reject the null
-plot(remv.mod.r8)
-dwtest(remv.mod.r8)
-summary(gvlma(remv.mod.r8))
-##### REJECT THE NULL - how to deal with this?
-
-dwtest(mort.mod.r2)
-summary(gvlma(mort.mod.r2))
-##### REJECT THE NULL - how to deal with this?
-dwtest(mort.mod.r9)
-summary(gvlma(mort.mod.r9))
-# fail to reject the null
-dwtest(mort.mod.r8)
-summary(gvlma(mort.mod.r8))
-##### REJECT THE NULL - how to deal with this?
-
-dwtest(growth.mod.r2)
-summary(gvlma(growth.mod.r2))
-# fail to reject the null
-dwtest(growth.mod.r9)
-summary(gvlma(growth.mod.r9))
-##### REJECT THE NULL - how to deal with this?
-dwtest(growth.mod.r8)
-summary(gvlma(mort.mod.r8))
-##### REJECT THE NULL - how to deal with this?
-
-
-
-mean(growth.mod.r9$residuals)
-plot(fitted(growth.mod.r9), residuals(growth.mod.r9))
-
-
-library(tseries)
-
-ts_growth_r9 <- ts(mod.dat.r9$growth.pct, start = 2003, end = 2014)
-ar_growth_r9 <- ar.ols(ts_growth_r9)
-
-
-ggAcf(mod.dat.r9$growth.pct)
+    scale_color_manual(values = c("black", "black","darkgreen")) +
+    scale_size_manual(values = c(1,1,1.5)) +
+    scale_linetype_manual(values = c("dashed","dashed","solid"))+
+    scale_y_continuous(limits = c(0, 150))+
+    labs(title = "White Oak Forecast - TS Regression",
+         y = "Inventory (Billions, Cubic Feet)",
+         x = "Year") +
+    theme_minimal() +
+  theme(legend.position = "none",plot.title = element_text(size=22), axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14), axis.title.x = element_text(size = 18), axis.title.y = element_text(size = 18)) 
+  
 ```
