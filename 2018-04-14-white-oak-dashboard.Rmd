@@ -111,8 +111,7 @@ sim_low <- unique(low_sim$sim_number)
 
 need_cols <- c("mean", "q90", "q10", "q975", "q025", sim_high, sim_low)
 
-total_plot <- forecast_total %>% 
-  select(-type) %>% 
+total_plot <- forecast_total %>%  
   filter(sim_number %in% need_cols)  %>%
   mutate(value = value/1000000000) %>% 
   spread(sim_number, 
@@ -133,7 +132,7 @@ renderDygraph({
       dySeries("Mean", color = "darkgreen", strokeWidth = 2) %>% 
         dySeries(c("High", "Mean", "Low"), color = "lightgrey") %>%
   dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% 
-  dyRangeSelector(height = 10) %>%
+  #dyRangeSelector(height = 10) %>%
     dyLegend(show = "onmouseover") %>%
     dyHighlight(highlightSeriesOpts = list(strokeWidth = 3)) %>% 
     dyAxis("y", valueRange = c(0, (max(total_plot$`97.5%`)+30)))
