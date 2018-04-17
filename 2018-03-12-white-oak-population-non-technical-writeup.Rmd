@@ -17,29 +17,29 @@ htmltools::img(src = knitr::image_uri("brown-forman-2788813.png" ),
 
 **Created by Bellarmine University Graduate Students**
 
-### *Conclusion/Result*
+#### *Result*
 
-**The white oak population will stay relatively flat in the next 10 years.** Due to limited historical data, it is important to use caution when interpreting these results further into the forecast horizon. With only 13 annual data points to build the forecast, looking out past ten years serves best as a directional indication of the White Oak population.
+**Based on our simulation, we expect the white oak population to stay relatively flat over the next 10 years.** Due to limited historical data, it is important to use caution when interpreting these results further into the forecast horizon. With only 12 annual data points used to build the forecast, looking out past ten years serves best as a directional indication of the White Oak population.
 
-### *Methodology*
+#### *Methodology*
 
-To build a forecast for the white oak population over the next 50 years, we decided to use a **simulation**. A simulation will allow us to forecast current trends in growth, removal, and mortality, as well as incorporate variables to capture the rare events such as catastrophic wildfires, category 5 tornados, and large-scale pest outbreaks. These are events that we would not expect to occur every year, or even once every 10 years. Therefore, by incorporating the probability of these events to occur each year we are able to get a better understanding of how potential environmental disasters can impact the population.
+To build a forecast for the white oak population over the next 50 years, we used a **simulation** model. This simulation allows us to forecast current trends in growth, removal, and mortality, while incorporating variables that capture the rare events such as catastrophic wildfires (class G as defined by the US Forest Service), category 5 tornados, and above average pest outbreaks. These are events that we would not expect to occur every year, or even once every 10 years. Therefore, by incorporating the probability of these events to occur each year we are able to get a better understanding of how potential environmental disasters can impact the population.
 
-Included in the simulation is the current trend of growth, removal, and mortality, as well as the associated error so that we can be sure to capture the full range of where we might expect the population to be. These trends, as well as the potential for environmental outbreaks, will give us a final forecast that will be based off the average of all the simulated outcomes, and that should be relatively close to where we would expect the true population to be over the next few years.
+Included in the simulation is the current trend of growth, removal, and mortality, as well as the associated error so that we can be sure to capture the full range of where we might expect the population to be in the future. These trends, as well as the potential for environmental outbreaks, will give us a final forecast that will be based off the average of all simulated outcomes, and that should be relatively close to where we would expect the true population to be over the next few years.
 
-### *Purpose*
+#### *Purpose*
 
 The Brown-Forman production team has requested a forecast of the White Oak population in order to better understand any short and/or long term risk associated with the population growth and mortality. A previous consultant had provided a forecast that had some fairly significant errors, and our goal was to enhance the consultant's work so that the resulting forecast is up-to-date and accurate.
 
-### *Data*
+#### *Data*
 
 The data used for this analysis was received from the U.S. Forest Service. The data contains annual, unit level volumes for White Oak on private, non-industrial lands in the Eastern states, and includes detail on the Growing Stock Inventory, Growth, Removal, and Mortality in cubic feet. The data spans the period 2003 through 2014.
 
-### *Simulation Dashboard*
+#### *Simulation Dashboard*
 
-In the simulation outline, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain rate of change values the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include a yearly shock value to provide a simple example of how we can incorporate the outside variables like wildfire, pests, drought, etc. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
+In the simulation outline, we sample from a normal distribution with a mean equal to the coefficient of a linear model and a standard deviation equal to the standard error on the coefficient estimate in order to obtain a rate of change value for the growth, removal, and mortality percent of inventory. We then calculate the new percent of inventory each year by multiplying the number of years elapsed by the rate of chance (ROC) and add an intercept (calculated by taking the mean of the last 5 years of data). We also include rare events, such as wildfires, pest outbreaks, and category 5 tornadoes. These events are determining the probability of each to occur in any year, and then if the event is determined to occur in a year, we choose the effect based on the historic effect sizes of these events. The initial inventory value is the true inventory in the year 2014, and each subsequent year is calculated by adding/subtracting the growth, removal, mortality, and yearly shock values.
 
-As well as an inventory forecast, we also provide an upper bound and a lower bound (95% confidence interval), based off of the upper and lower estimates for the slope coefficient from the model. The 95% confidence interval means that we are 95% confident that the true values lies somewhere between the upper and lower bounds.
+As well as an inventory forecast, we also provide an upper bound and a lower bound (95% and 80% confidence intervals), based on where our simulated predictions fell. The 95% confidence interval represents the bounds between which 95% of our simulations forecasted the population to be through 2064.
 
 #### *Simulation*
 
